@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../services/dog_breed_service.dart';
 import '../models/dog_breed_model.dart' as models;
+import 'package:geocoding/geocoding.dart';
 
 class DogEncyclopediaScreen extends StatefulWidget {
   @override
@@ -51,9 +52,35 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen> with Sing
   Future<void> _loadBreeds() async {
     try {
       final breeds = await _breedService.getAllBreeds();
+
+      // 원산지 좌표가 없는 경우 지오코딩으로 좌표 찾기
+      List<models.DogBreed> updatedBreeds = [];
+      for (var breed in breeds) {
+        if (breed.originLatLng == null) {
+          try {
+            final locations = await locationFromAddress(breed.origin);
+            if (locations.isNotEmpty) {
+              final location = locations.first;
+              final latLng = models.LatLng(
+                  latitude: location.latitude,
+                  longitude: location.longitude
+              );
+              updatedBreeds.add(breed.copyWith(originLatLng: latLng));
+            } else {
+              updatedBreeds.add(breed);
+            }
+          } catch (e) {
+            print('지오코딩 오류: ${e.toString()}');
+            updatedBreeds.add(breed);
+          }
+        } else {
+          updatedBreeds.add(breed);
+        }
+      }
+
       setState(() {
-        _breeds = breeds;
-        _filteredBreeds = breeds;
+        _breeds = updatedBreeds;
+        _filteredBreeds = updatedBreeds;
         _isLoading = false;
         _setupMarkers();
       });
@@ -68,7 +95,7 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen> with Sing
   }
 
   void _setupMarkers() {
-    _markers = _breeds.where((breed) => breed.originLatLng != null).map((breed) {
+    _markers = _filteredBreeds.where((breed) => breed.originLatLng != null).map((breed) {
       return Marker(
         markerId: MarkerId(breed.id),
         position: LatLng(
@@ -101,6 +128,8 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen> with Sing
               breed.origin.toLowerCase().contains(query.toLowerCase());
         }).toList();
       }
+      // 필터링 후 마커 업데이트
+      _setupMarkers();
     });
   }
 
@@ -119,7 +148,6 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen> with Sing
           labelColor: Colors.white, // 선택된 탭의 텍스트 색상
           unselectedLabelColor: Colors.grey, // 선택되지 않은 탭의 텍스트 색상
           indicatorColor: Colors.white, // 선택된 탭 아래 표시되는 인디케이터 색상
-
         ),
       ),
       body: Column(

@@ -1,5 +1,6 @@
 import 'dart:io';
 import '../models/dog_breed_model.dart';
+import '../data/dog_breeds_data.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -71,22 +72,9 @@ class DogBreedService {
   }
 
   Future<List<DogBreed>> getAllBreeds() async {
-    List<DogBreed> breeds = [
-      DogBreed(
-        id: '1',
-        name: '골든 리트리버',
-        origin: '영국',
-        description: '친절하고 충성스러운 견종입니다.',
-        imageUrl: 'https://example.com/golden.jpg',
-      ),
-      DogBreed(
-        id: '2',
-        name: '웰시 코기',
-        origin: '웨일스',
-        description: '활발하고 지능적인 견종으로 짧은 다리와 긴 몸통이 특징입니다.',
-        imageUrl: 'https://example.com/corgi.jpg',
-      ),
-    ];
+    // 초기 견종 데이터 가져오기
+    List<DogBreed> breeds = DogBreedsData.getInitialBreeds();
+
     // 각 견종에 대해 위키백과 이미지 가져오기
     for (var i = 0; i < breeds.length; i++) {
       final imageUrl = await getWikipediaImage(breeds[i].name);
