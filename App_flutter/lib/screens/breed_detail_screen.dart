@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../models/dog_breed_model.dart';
 import '../services/dog_breed_service.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class BreedDetailScreen extends StatefulWidget {
   @override
@@ -12,10 +13,15 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
   final DogBreedService _breedService = DogBreedService();
   bool _isLoading = false;
   String? _wikiContent;
+  bool _showWebView = false;
+  late WebViewController _webViewController;
 
   @override
   void initState() {
     super.initState();
+    _webViewController = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadWikiContent();
     });
@@ -53,8 +59,20 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(breed.name),
+        actions: _showWebView ? [
+          IconButton(
+            icon: Icon(Icons.close),
+            onPressed: () {
+              setState(() {
+                _showWebView = false;
+              });
+            },
+          )
+        ] : null,
       ),
-      body: SingleChildScrollView(
+      body: _showWebView
+          ? WebViewWidget(controller: _webViewController)
+          : SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -145,8 +163,11 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
                   // 위키백과 링크 버튼
                   OutlinedButton.icon(
                     onPressed: () {
-                      // 위키백과 링크 열기 (URL 런처 사용)
-                      // 실제 구현 시에는 url_launcher 패키지를 사용해야 합니다
+                      final String wikipediaUrl = 'https://ko.wikipedia.org/wiki/${breed.name}';
+                      _webViewController.loadRequest(Uri.parse(wikipediaUrl));
+                      setState(() {
+                        _showWebView = true;
+                      });
                     },
                     icon: Icon(Icons.open_in_new),
                     label: Text('위키백과에서 더 보기'),
@@ -161,7 +182,7 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
             ),
           ],
         ),
-      ),
+      )
     );
   }
 
@@ -190,7 +211,7 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
             ),
           ),
         ],
-      ),
+      )
     );
   }
 }
