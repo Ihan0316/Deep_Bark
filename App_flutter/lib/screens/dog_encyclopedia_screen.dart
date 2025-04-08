@@ -6,6 +6,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../services/dog_breed_service.dart';
 import '../models/dog_breed_model.dart' as models;
 import 'package:geocoding/geocoding.dart';
+import '../services/app_localizations.dart';
+import 'package:provider/provider.dart';
+import '../services/locale_provider.dart';
 
 class DogEncyclopediaScreen extends StatefulWidget {
   @override
@@ -51,7 +54,12 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen> with Sing
 
   Future<void> _loadBreeds() async {
     try {
-      final breeds = await _breedService.getAllBreeds();
+      // 현재 언어 코드 가져오기
+      final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
+      final languageCode = localeProvider.locale.languageCode;
+
+      // 언어 코드 전달
+      final breeds = await _breedService.getAllBreeds(languageCode);
 
       // 원산지 좌표가 없는 경우 지오코딩으로 좌표 찾기
       List<models.DogBreed> updatedBreeds = [];
@@ -88,8 +96,9 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen> with Sing
       setState(() {
         _isLoading = false;
       });
+      final localizations = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('품종 정보를 불러오는데 실패했습니다: ${e.toString()}')),
+        SnackBar(content: Text(localizations.translate('failed_to_load_breeds') + ': ${e.toString()}')),
       );
     }
   }
@@ -135,30 +144,31 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen> with Sing
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('멍멍백서'),
+        title: Text(localizations.translate('dog_encyclopedia')),
         bottom: TabBar(
           controller: _tabController,
           splashFactory: NoSplash.splashFactory,
           tabs: [
-            Tab(icon: Icon(Icons.list), text: '목록'),
-            Tab(icon: Icon(Icons.map), text: '세계지도'),
+            Tab(icon: Icon(Icons.list), text: localizations.translate('list')),
+            Tab(icon: Icon(Icons.map), text: localizations.translate('world_map')),
           ],
-          labelColor: Colors.white, // 선택된 탭의 텍스트 색상
-          unselectedLabelColor: Colors.grey, // 선택되지 않은 탭의 텍스트 색상
-          indicatorColor: Colors.white, // 선택된 탭 아래 표시되는 인디케이터 색상
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.grey,
+          indicatorColor: Colors.white,
         ),
       ),
       body: Column(
         children: [
-          // 검색 바
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: '품종 또는 원산지 검색',
+                hintText: localizations.translate('search_breed_or_origin'),
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -168,18 +178,15 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen> with Sing
               onChanged: _filterBreeds,
             ),
           ),
-
-          // 탭 내용
           Expanded(
             child: TabBarView(
               controller: _tabController,
-              physics: NeverScrollableScrollPhysics(), // 탭 스와이프 비활성화
+              physics: NeverScrollableScrollPhysics(),
               children: [
-                // 목록 탭
                 _isLoading
                     ? Center(child: CircularProgressIndicator())
                     : _filteredBreeds.isEmpty
-                    ? Center(child: Text('검색 결과가 없습니다'))
+                    ? Center(child: Text(localizations.translate('no_search_results')))
                     : ListView.builder(
                   itemCount: _filteredBreeds.length,
                   itemBuilder: (context, index) {
@@ -210,7 +217,7 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen> with Sing
                         child: Icon(Icons.pets, color: Colors.grey[600]),
                       ),
                       title: Text(breed.name),
-                      subtitle: Text(breed.origin),
+                      subtitle: Text('${localizations.translate('origin')}: ${breed.origin}'),
                       onTap: () {
                         Navigator.pushNamed(
                           context,
@@ -221,8 +228,6 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen> with Sing
                     );
                   },
                 ),
-
-                // 지도 탭
                 _isLoading
                     ? Center(child: CircularProgressIndicator())
                     : Stack(

@@ -1,6 +1,9 @@
 // lib/screens/signup_screen.dart
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/app_localizations.dart';
+import 'package:provider/provider.dart';
+import '../services/locale_provider.dart';
 
 class SignupScreen extends StatefulWidget {
   @override
@@ -11,15 +14,17 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   final AuthService _authService = AuthService();
   bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('회원가입'),
+        title: Text(localizations.translate('signup')),
         backgroundColor: Colors.brown,
       ),
       body: SafeArea(
@@ -32,7 +37,7 @@ class _SignupScreenState extends State<SignupScreen> {
               TextField(
                 controller: _nameController,
                 decoration: InputDecoration(
-                  labelText: '이름',
+                  labelText: localizations.translate('name'),
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person),
                 ),
@@ -42,7 +47,7 @@ class _SignupScreenState extends State<SignupScreen> {
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
-                  labelText: '이메일',
+                  labelText: localizations.translate('email'),
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.email),
                 ),
@@ -53,7 +58,7 @@ class _SignupScreenState extends State<SignupScreen> {
               TextField(
                 controller: _passwordController,
                 decoration: InputDecoration(
-                  labelText: '비밀번호',
+                  labelText: localizations.translate('password'),
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.lock),
                 ),
@@ -64,7 +69,7 @@ class _SignupScreenState extends State<SignupScreen> {
               TextField(
                 controller: _confirmPasswordController,
                 decoration: InputDecoration(
-                  labelText: '비밀번호 확인',
+                  labelText: localizations.translate('confirm_password'),
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.lock_outline),
                 ),
@@ -75,20 +80,20 @@ class _SignupScreenState extends State<SignupScreen> {
               _isLoading
                   ? CircularProgressIndicator()
                   : ElevatedButton(
-                onPressed: _signup,
-                child: Text('회원가입'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.brown,
-                  minimumSize: Size(double.infinity, 50),
-                ),
-              ),
+                    onPressed: _signup,
+                    child: Text(localizations.translate('signup')),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.brown,
+                      minimumSize: Size(double.infinity, 50),
+                    ),
+                  ),
               SizedBox(height: 15),
               // 로그인 페이지로 돌아가기
               TextButton(
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                child: Text('이미 계정이 있으신가요? 로그인'),
+                child: Text(localizations.translate('already_have_account')),
               ),
             ],
           ),
@@ -98,20 +103,21 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> _signup() async {
+    final localizations = AppLocalizations.of(context);
     // 입력 검증
     if (_nameController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _passwordController.text.isEmpty ||
         _confirmPasswordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('모든 필드를 입력해주세요')),
+        SnackBar(content: Text(localizations.translate('fill_all_fields'))),
       );
       return;
     }
 
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('비밀번호가 일치하지 않습니다')),
+        SnackBar(content: Text(localizations.translate('passwords_not_match'))),
       );
       return;
     }
@@ -129,7 +135,11 @@ class _SignupScreenState extends State<SignupScreen> {
       Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('회원가입 실패: ${e.toString()}')),
+        SnackBar(
+          content: Text(
+            '${localizations.translate('signup_failed')}: ${e.toString()}',
+          ),
+        ),
       );
     } finally {
       setState(() {

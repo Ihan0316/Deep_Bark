@@ -2,6 +2,9 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
+import '../services/app_localizations.dart';
+import 'package:provider/provider.dart';
+import '../services/locale_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -21,7 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
     getAppHash();
   }
 
-// 앱 해시 확인 메서드
+  // 앱 해시 확인 메서드
   Future<void> getAppHash() async {
     try {
       final String keyHash = await KakaoSdk.origin;
@@ -31,9 +34,71 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // 언어 선택 다이얼로그 표시
+  void _showLanguageSelector(BuildContext context) {
+    final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
+    final localizations = AppLocalizations.of(context);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(localizations.translate('language_settings')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: Text('한국어'),
+                trailing: localeProvider.locale.languageCode == 'ko'
+                    ? Icon(Icons.check, color: Colors.brown)
+                    : null,
+                onTap: () {
+                  localeProvider.setLocale('ko');
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                title: Text('English'),
+                trailing: localeProvider.locale.languageCode == 'en'
+                    ? Icon(Icons.check, color: Colors.brown)
+                    : null,
+                onTap: () {
+                  localeProvider.setLocale('en');
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                title: Text('日本語'),
+                trailing: localeProvider.locale.languageCode == 'ja'
+                    ? Icon(Icons.check, color: Colors.brown)
+                    : null,
+                onTap: () {
+                  localeProvider.setLocale('ja');
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                title: Text('中文'),
+                trailing: localeProvider.locale.languageCode == 'zh'
+                    ? Icon(Icons.check, color: Colors.brown)
+                    : null,
+                onTap: () {
+                  localeProvider.setLocale('zh');
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    final localeProvider = Provider.of<LocaleProvider>(context);
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -41,6 +106,15 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // 언어 선택 버튼 추가
+              Align(
+                alignment: Alignment.topRight,
+                child: IconButton(
+                  icon: Icon(Icons.language),
+                  onPressed: () => _showLanguageSelector(context),
+                  tooltip: localizations.translate('language_settings'),
+                ),
+              ),
               // 로고
               Image.asset(
                 'assets/images/logo.png',
@@ -52,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
-                  labelText: '이메일',
+                  labelText: localizations.translate('email'),
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.email),
                 ),
@@ -63,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
               TextField(
                 controller: _passwordController,
                 decoration: InputDecoration(
-                  labelText: '비밀번호',
+                  labelText: localizations.translate('password'),
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.lock),
                 ),
@@ -75,7 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ? CircularProgressIndicator()
                   : ElevatedButton(
                 onPressed: _login,
-                child: Text('로그인'),
+                child: Text(localizations.translate('login')),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.brown,
                   minimumSize: Size(double.infinity, 50),
@@ -87,10 +161,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: () {
                   Navigator.pushNamed(context, '/signup');
                 },
-                child: Text('계정이 없으신가요? 회원가입'),
+                child: Text(localizations.translate('no_account_signup')),
               ),
               SizedBox(height: 30),
-              Text('또는 소셜 계정으로 로그인'),
+              Text(localizations.translate('or_login_with_social')),
               SizedBox(height: 15),
               // 소셜 로그인 버튼들
               Column(
@@ -123,9 +197,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
+    final localizations = AppLocalizations.of(context);
+
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('이메일과 비밀번호를 입력해주세요')),
+        SnackBar(content: Text(localizations.translate('enter_email_password'))),
       );
       return;
     }
@@ -142,7 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('로그인 실패: ${e.toString()}')),
+        SnackBar(content: Text('${localizations.translate('login_failed')}: ${e.toString()}')),
       );
     } finally {
       setState(() {
@@ -152,10 +228,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _googleLogin() async {
+    final localizations = AppLocalizations.of(context);
+
     setState(() {
       _isLoading = true;
     });
-
 
     try {
       bool success = await _authService.signInWithGoogle();
@@ -164,12 +241,12 @@ class _LoginScreenState extends State<LoginScreen> {
       }
       else{
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('구글 로그인을 취소했습니다')),
+          SnackBar(content: Text(localizations.translate('google_login_canceled'))),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('구글 로그인 실패: ${e.toString()}')),
+        SnackBar(content: Text('${localizations.translate('google_login_failed')}: ${e.toString()}')),
       );
     } finally {
       setState(() {
@@ -179,6 +256,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _kakaoLogin() async {
+    final localizations = AppLocalizations.of(context);
+
     setState(() {
       _isLoading = true;
     });
@@ -190,12 +269,12 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.pushReplacementNamed(context, '/home');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('카카오 로그인을 취소했습니다')),
+          SnackBar(content: Text(localizations.translate('kakao_login_canceled'))),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('카카오 로그인 실패: ${e.toString()}')),
+        SnackBar(content: Text('${localizations.translate('kakao_login_failed')}: ${e.toString()}')),
       );
     } finally {
       setState(() {
@@ -203,6 +282,4 @@ class _LoginScreenState extends State<LoginScreen> {
       });
     }
   }
-
-
 }

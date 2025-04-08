@@ -4,6 +4,9 @@ import '../services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:app_flutter/screens/language_settings_screen.dart';
+import '../services/app_localizations.dart';
+import '../services/locale_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -25,7 +28,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-
   Future<void> _getImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
@@ -38,14 +40,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+    final localeProvider = Provider.of<LocaleProvider>(context);
+    final localizations = AppLocalizations.of(context);
 
     // 디버깅용 출력
     print('빌드 시 사용자 정보: ${authService.userName}, ${authService.userEmail}');
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text("마이페이지"),
-      ),
+      appBar: AppBar(title: Text(localizations.translate('profile'))),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -59,19 +61,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: CircleAvatar(
                   radius: 60,
                   backgroundColor: Colors.grey[300],
-                  backgroundImage: _profileImage != null
-                      ? FileImage(_profileImage!)
-                      : (authService.profileImageUrl.isNotEmpty
-                      ? NetworkImage(authService.profileImageUrl) as ImageProvider
-                      : null),
-                  child: (_profileImage == null && authService.profileImageUrl.isEmpty)
-                      ? Icon(Icons.person, size: 60, color: Colors.grey[600])
-                      : null,
+                  backgroundImage:
+                      _profileImage != null
+                          ? FileImage(_profileImage!)
+                          : (authService.profileImageUrl.isNotEmpty
+                              ? NetworkImage(authService.profileImageUrl)
+                                  as ImageProvider
+                              : null),
+                  child:
+                      (_profileImage == null &&
+                              authService.profileImageUrl.isEmpty)
+                          ? Icon(
+                            Icons.person,
+                            size: 60,
+                            color: Colors.grey[600],
+                          )
+                          : null,
                 ),
               ),
               SizedBox(height: 10),
               Text(
-                "프로필 이미지 변경",
+                localizations.translate('change_profile_image'),
                 style: TextStyle(
                   color: Colors.blue,
                   fontWeight: FontWeight.bold,
@@ -96,7 +106,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Icon(Icons.account_circle, color: Colors.blue),
                               SizedBox(width: 8),
                               Text(
-                                "Google 계정으로 로그인됨",
+                                localizations.translate(
+                                  'logged_in_with_google',
+                                ),
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.blue,
@@ -113,7 +125,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Icon(Icons.account_circle, color: Colors.indigo),
                               SizedBox(width: 8),
                               Text(
-                                "kakao 계정으로 로그인됨",
+                                localizations.translate('logged_in_with_kakao'),
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.indigo,
@@ -126,7 +138,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       // 이메일 정보
                       ListTile(
                         leading: Icon(Icons.email),
-                        title: Text("이메일"),
+                        title: Text(localizations.translate('email')),
                         subtitle: Text(
                           authService.userEmail,
                           style: TextStyle(fontWeight: FontWeight.bold),
@@ -137,7 +149,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       // 이름 정보
                       ListTile(
                         leading: Icon(Icons.person),
-                        title: Text("이름"),
+                        title: Text(localizations.translate('name')),
                         subtitle: Text(
                           authService.userName,
                           style: TextStyle(fontWeight: FontWeight.bold),
@@ -148,35 +160,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           _nameController.text = authService.userName;
                           showDialog(
                             context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text("이름 변경"),
-                              content: TextField(
-                                controller: _nameController,
-                                decoration: InputDecoration(
-                                  hintText: "새 이름을 입력하세요",
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text("취소"),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    final newName = _nameController.text;
-                                    if (newName.isNotEmpty) {
-                                      authService.updateUserName(newName);
-                                    }
-                                    Navigator.pop(context);
-                                  },
-                                  child: Text("변경"),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: Colors.brown,
+                            builder:
+                                (context) => AlertDialog(
+                                  title: Text(
+                                    localizations.translate('change_name'),
                                   ),
+                                  content: TextField(
+                                    controller: _nameController,
+                                    decoration: InputDecoration(
+                                      hintText: localizations.translate(
+                                        'enter_new_name',
+                                      ),
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: Text(
+                                        localizations.translate('cancel'),
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        final newName = _nameController.text;
+                                        if (newName.isNotEmpty) {
+                                          authService.updateUserName(newName);
+                                        }
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text(
+                                        localizations.translate('change'),
+                                      ),
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Colors.brown,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
                           );
                         },
                       ),
@@ -196,7 +217,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       ListTile(
                         leading: Icon(Icons.notifications),
-                        title: Text("알림 설정"),
+                        title: Text(
+                          localizations.translate('notification_settings'),
+                        ),
                         trailing: Switch(
                           value: authService.notificationsEnabled,
                           onChanged: (value) {
@@ -208,11 +231,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Divider(),
                       ListTile(
                         leading: Icon(Icons.language),
-                        title: Text("언어 설정"),
-                        subtitle: Text("한국어"),
+                        title: Text(
+                          localizations.translate('language_settings'),
+                        ),
+                        subtitle: Text(localeProvider.getLanguageName()),
                         trailing: Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: () {
-                          // 언어 설정 화면으로 이동
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => LanguageSettingsScreen(),
+                            ),
+                          );
                         },
                       ),
                     ],
@@ -229,7 +259,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Navigator.pushReplacementNamed(context, '/login');
                   });
                 },
-                child: Text("로그아웃"),
+                child: Text(localizations.translate('logout')),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   minimumSize: Size(double.infinity, 50),
@@ -244,33 +274,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   // 회원 탈퇴 확인 다이얼로그 표시
                   showDialog(
                     context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text("회원 탈퇴"),
-                      content: Text("정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다."),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text("취소"),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            // 회원 탈퇴 처리
-                            authService.deleteAccount().then((_) {
-                              Navigator.pop(context);
-                              Navigator.pushReplacementNamed(context, '/login');
-                            });
-                          },
-                          child: Text("탈퇴"),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.red,
+                    builder:
+                        (context) => AlertDialog(
+                          title: Text(
+                            localizations.translate('delete_account'),
                           ),
+                          content: Text(
+                            localizations.translate('delete_account_confirm'),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text(localizations.translate('cancel')),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                // 회원 탈퇴 처리
+                                authService.deleteAccount().then((_) {
+                                  Navigator.pop(context);
+                                  Navigator.pushReplacementNamed(
+                                    context,
+                                    '/login',
+                                  );
+                                });
+                              },
+                              child: Text(localizations.translate('delete')),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.red,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
                   );
                 },
                 child: Text(
-                  "회원 탈퇴",
+                  localizations.translate('delete_account'),
                   style: TextStyle(color: Colors.grey),
                 ),
               ),

@@ -4,6 +4,9 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../services/dog_breed_service.dart';
 import '../services/auth_service.dart';
+import '../services/app_localizations.dart';
+import 'package:provider/provider.dart';
+import '../services/locale_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -55,7 +58,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('이미지 분석 중 오류가 발생했습니다: ${e.toString()}')),
+        SnackBar(content: Text(AppLocalizations.of(context).translate('image_analysis_error') + ': ${e.toString()}')),
       );
     } finally {
       setState(() {
@@ -66,12 +69,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    final localeProvider = Provider.of<LocaleProvider>(context);
+
     return WillPopScope(
       onWillPop: () async => false, // 뒤로가기 동작 방지
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,  // 뒤로가기 버튼 비활성화
-          title: Text("멍멍스캔"),
+          title: Text(localizations.translate('app_title')),
           backgroundColor: Colors.brown,
           actions: [
             IconButton(
@@ -90,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 SizedBox(height: 20),
                 Text(
-                  "반려견 품종을 스캔해보세요!",
+                  localizations.translate('scan_dog'),
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -130,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ElevatedButton.icon(
                       onPressed: _getImageFromCamera,
                       icon: Icon(Icons.camera_alt),
-                      label: Text("카메라"),
+                      label: Text(localizations.translate('camera')),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.brown,
                         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -140,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ElevatedButton.icon(
                       onPressed: _getImageFromGallery,
                       icon: Icon(Icons.photo_library),
-                      label: Text("갤러리"),
+                      label: Text(localizations.translate('gallery')),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.brown,
                         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -154,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? CircularProgressIndicator()
                     : ElevatedButton(
                   onPressed: _image == null ? null : _analyzeImage,
-                  child: Text("품종 분석하기"),
+                  child: Text(localizations.translate('analyze')),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.brown,
                     minimumSize: Size(double.infinity, 50),
@@ -168,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.pushNamed(context, "/encyclopedia");
                   },
                   icon: Icon(Icons.book),
-                  label: Text("멍멍백서 보러가기"),
+                  label: Text(localizations.translate('encyclopedia')),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.brown,
                     side: BorderSide(color: Colors.brown),
@@ -185,15 +191,15 @@ class _HomeScreenState extends State<HomeScreen> {
           items: [
             BottomNavigationBarItem(
               icon: Icon(Icons.pets),
-              label: "멍멍스캔",
+              label: localizations.translate('dog_scan'),
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.book),
-              label: "멍멍백서",
+              label: localizations.translate('encyclopedia'),
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person),
-              label: "마이페이지",
+              label: localizations.translate('profile'),
             ),
           ],
           onTap: (index) {

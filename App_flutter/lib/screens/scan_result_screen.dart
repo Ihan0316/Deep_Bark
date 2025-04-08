@@ -1,19 +1,22 @@
 // lib/screens/scan_result_screen.dart
 import 'package:flutter/material.dart';
-import 'dart:io';  // File 클래스를 사용하기 위해 추가
+import 'dart:io';
 import '../models/dog_breed_model.dart';
+import '../services/app_localizations.dart';
+import 'package:provider/provider.dart';
+import '../services/locale_provider.dart';
 
 class ScanResultScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // 이전 화면에서 전달받은 결과 데이터
     final Map<String, dynamic> args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final List<DogBreed> results = args['results'];
     final String imagePath = args['imagePath'];
+    final localizations = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('분석 결과'),
+        title: Text(localizations.translate('analysis_result')),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -21,7 +24,6 @@ class ScanResultScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 분석된 이미지 표시
               Container(
                 width: double.infinity,
                 height: 250,
@@ -48,7 +50,7 @@ class ScanResultScreen extends StatelessWidget {
               SizedBox(height: 24),
 
               Text(
-                '분석 결과',
+                localizations.translate('analysis_result'),
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -57,7 +59,6 @@ class ScanResultScreen extends StatelessWidget {
 
               SizedBox(height: 16),
 
-              // 상위 3개 결과 표시
               ...List.generate(
                 results.length > 3 ? 3 : results.length,
                     (index) => _buildResultItem(context, results[index], index),
@@ -65,7 +66,6 @@ class ScanResultScreen extends StatelessWidget {
 
               SizedBox(height: 24),
 
-              // 백과사전 바로가기 버튼
               if (results.isNotEmpty)
                 ElevatedButton.icon(
                   onPressed: () {
@@ -76,7 +76,7 @@ class ScanResultScreen extends StatelessWidget {
                     );
                   },
                   icon: Icon(Icons.book),
-                  label: Text('백과사전에서 더 알아보기'),
+                  label: Text(localizations.translate('learn_more_in_encyclopedia')),
                   style: ElevatedButton.styleFrom(
                     minimumSize: Size(double.infinity, 50),
                   ),
@@ -88,8 +88,8 @@ class ScanResultScreen extends StatelessWidget {
     );
   }
 
-  // 결과 아이템 위젯
   Widget _buildResultItem(BuildContext context, DogBreed breed, int index) {
+    final localizations = AppLocalizations.of(context);
     return Card(
       margin: EdgeInsets.only(bottom: 12),
       child: ListTile(
@@ -102,9 +102,9 @@ class ScanResultScreen extends StatelessWidget {
           '${index + 1}. ${breed.name}',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        subtitle: Text('원산지: ${breed.origin}'),
+        subtitle: Text('${localizations.translate('origin')}: ${breed.origin}'),
         trailing: Text(
-          '일치도: ${(0.9 - (index * 0.15)).toStringAsFixed(2)}',
+          '${localizations.translate('match_rate')}: ${(0.9 - (index * 0.15)).toStringAsFixed(2)}',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.orange,
