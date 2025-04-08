@@ -101,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     onTap: _googleLogin,
                     child: Image.asset(
                       'assets/images/android_light.png',
-                      width: 150,
+                      width: 300,
                     ),
                   ),
                   SizedBox(height: 20),
@@ -110,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     onTap: _kakaoLogin,
                     child: Image.asset(
                       'assets/images/kakao_login_medium_wide.png',
-                      width: 150,
+                      width: 300,
                     ),
                   ),
                 ],
