@@ -105,7 +105,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ],
                           ),
                         ),
-                      if (authService.userId.startsWith('facebook'))
+                      if (authService.userId.startsWith('kakao'))
                         Padding(
                           padding: const EdgeInsets.only(bottom: 16.0),
                           child: Row(
@@ -113,7 +113,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               Icon(Icons.account_circle, color: Colors.indigo),
                               SizedBox(width: 8),
                               Text(
-                                "Facebook 계정으로 로그인됨",
+                                "kakao 계정으로 로그인됨",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.indigo,
