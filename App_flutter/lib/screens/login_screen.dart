@@ -15,6 +15,24 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    // 앱 해시 출력
+    getAppHash();
+  }
+
+// 앱 해시 확인 메서드
+  Future<void> getAppHash() async {
+    try {
+      final String keyHash = await KakaoSdk.origin;
+      print('카카오 앱 해시: $keyHash');
+    } catch (e) {
+      print('앱 해시 확인 실패: $e');
+    }
+  }
+
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
@@ -75,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Text('또는 소셜 계정으로 로그인'),
               SizedBox(height: 15),
               // 소셜 로그인 버튼들
-              Row(
+              Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // 구글 로그인
@@ -86,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       width: 150,
                     ),
                   ),
-                  SizedBox(width: 20),
+                  SizedBox(height: 20),
                   // 카카오 로그인
                   InkWell(
                     onTap: _kakaoLogin,
