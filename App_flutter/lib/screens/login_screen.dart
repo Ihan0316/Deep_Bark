@@ -1,6 +1,7 @@
 // lib/screens/login_screen.dart
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -78,22 +79,22 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // 구글 로그인
-                  Center(
-                    child: InkWell(
-                      onTap: _googleLogin,
-                      child: Image.asset(
-                        'assets/images/android_light.png',
-                        width: 300,
-                      ),
+                  InkWell(
+                    onTap: _googleLogin,
+                    child: Image.asset(
+                      'assets/images/android_light.png',
+                      width: 150,
                     ),
-                  )
-                  // SizedBox(width: 20),
-                  // 페이스북 로그인
-                  // IconButton(
-                  //   icon: Image.asset('assets/images/facebook_logo.png', width: 30),
-                  //   onPressed: _facebookLogin,
-                  //   iconSize: 50,
-                  // ),
+                  ),
+                  SizedBox(width: 20),
+                  // 카카오 로그인
+                  InkWell(
+                    onTap: _kakaoLogin,
+                    child: Image.asset(
+                      'assets/images/kakao_login_medium_wide.png',
+                      width: 150,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -151,17 +152,24 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  Future<void> _facebookLogin() async {
+  Future<void> _kakaoLogin() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      await _authService.signInWithFacebook();
-      Navigator.pushReplacementNamed(context, '/home');
+      bool success = await _authService.signInWithKakao();
+
+      if (success) {
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('카카오 로그인에 실패했습니다')),
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('페이스북 로그인 실패: ${e.toString()}')),
+        SnackBar(content: Text('카카오 로그인 실패: ${e.toString()}')),
       );
     } finally {
       setState(() {
@@ -169,4 +177,6 @@ class _LoginScreenState extends State<LoginScreen> {
       });
     }
   }
+
+
 }

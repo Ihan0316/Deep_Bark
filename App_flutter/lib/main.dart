@@ -1,6 +1,7 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
 // import 'package:firebase_core/firebase_core.dart'; // 주석 처리
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart'; // 카카오 SDK import 추가
 
 // 화면 import
 import 'screens/splash_screen.dart';
@@ -19,19 +20,16 @@ import 'package:provider/provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // 카카오 SDK 초기화 (네이티브 앱 키로 교체 필요)
+  KakaoSdk.init(nativeAppKey: 'f72cc05a22c1e94081315d79eb930c42');
+
   // AuthService 초기화 및 현재 사용자 확인
   final authService = AuthService();
   await authService.checkCurrentUser();
 
-  // Firebase 초기화 코드 주석 처리
-  // try {
-  //   await Firebase.initializeApp();
-  // } catch (e) {
-  //   print('Firebase 초기화 오류: $e');
-  // }
-
   runApp(MyApp(authService: authService));
 }
+
 
 class MyApp extends StatelessWidget {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();

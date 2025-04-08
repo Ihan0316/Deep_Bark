@@ -4,6 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 
 class AuthService extends ChangeNotifier {
   bool _isLoggedIn = false;
@@ -12,7 +13,7 @@ class AuthService extends ChangeNotifier {
   String _userName = '사용자';
   bool _notificationsEnabled = true;
   String _profileImageUrl = '';
-  String _loginProvider = ''; // 로그인 제공자 추적 (google, facebook, email)
+  String _loginProvider = ''; // 로그인 제공자 추적 (google, kakao, email)
 
   // Google Sign In 인스턴스
   final GoogleSignIn _googleSignIn = GoogleSignIn(
@@ -169,6 +170,70 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  Future<bool> signInWithKakao() async {
+    try {
+      // 변수명을 다르게 지정하여 메서드와 구분
+      bool isInstalled = await isKakaoTalkInstalled();
+
+      OAuthToken token;
+      if (isInstalled) {
+        // 카카오톡으로 로그인
+        token = await UserApi.instance.loginWithKakaoTalk();
+      } else {
+        // 카카오 계정으로 로그인
+        token = await UserApi.instance.loginWithKakaoAccount();
+      }
+
+      // 사용자 정보 가져오기
+      User user = await UserApi.instance.me();
+
+      // 사용자 정보 저장
+      _isLoggedIn = true;
+      _userId = 'kakao_${user.id}';  // 카카오 사용자임을 명확히 표시
+      _userEmail = user.kakaoAccount?.email ?? 'kakao_user@example.com';
+      _userName = user.kakaoAccount?.profile?.nickname ?? '카카오 사용자';
+      _profileImageUrl = user.kakaoAccount?.profile?.profileImageUrl ?? '';
+      _loginProvider = 'kakao';
+
+      // 로컬에 사용자 정보 저장
+      await _saveUserToLocal();
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      print('Kakao Sign In Error: $e');
+      return false;
+    }
+  }
+
+  Future<bool> signInWithKakaoAccount() async {
+    try {
+      // 카카오계정으로 로그인
+      OAuthToken token = await UserApi.instance.loginWithKakaoAccount();
+
+      // 사용자 정보 가져오기
+      User user = await UserApi.instance.me();
+
+      // 사용자 정보 저장
+      _isLoggedIn = true;
+      _userId = 'kakao_${user.id}';
+      _userEmail = user.kakaoAccount?.email ?? 'kakao_user@example.com';
+      _userName = user.kakaoAccount?.profile?.nickname ?? '카카오 사용자';
+      _profileImageUrl = user.kakaoAccount?.profile?.profileImageUrl ?? '';
+      _loginProvider = 'kakao';
+
+      // 로컬에 사용자 정보 저장
+      await _saveUserToLocal();
+
+      notifyListeners();
+      return true;
+    } catch (e) {
+      print('Kakao Account Sign In Error: $e');
+      return false;
+    }
+  }
+
+
   // 추가 사용자 정보를 가져오는 메서드 (선택 사항)
   Future<void> _fetchAdditionalUserInfo(String? accessToken) async {
     if (accessToken == null) return;
@@ -199,19 +264,6 @@ class AuthService extends ChangeNotifier {
     } catch (e) {
       print('추가 정보 가져오기 실패: $e');
     }
-  }
-
-  Future<bool> signInWithFacebook() async {
-    // Facebook 로그인 로직 구현
-    _isLoggedIn = true;
-    _userId = 'facebook_user_${DateTime.now().millisecondsSinceEpoch}';
-    _userEmail = 'facebook_user@facebook.com';
-    _userName = 'Facebook 사용자';
-    _loginProvider = 'facebook';
-
-    await _saveUserToLocal();
-    notifyListeners();
-    return true;
   }
 
   // 추가 메서드
