@@ -4,19 +4,84 @@ import '../data/dog_breeds_data.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
+import 'package:async/async.dart';
 
 class DogBreedService {
+  // Flask 서버 URL (실제 서버 주소로 변경 필요)
+  final String baseUrl = 'http://10.0.2.2:5000'; // Android 에뮬레이터에서 로컬호스트 접근용
+  // 실제 기기나 iOS 시뮬레이터에서는 실제 IP 주소 사용 필요
+  // 예: final String baseUrl = 'http://192.168.0.100:5000';
+
   Future<List<DogBreed>> analyzeImage(File image) async {
-    // 이미지 분석 로직 구현
-    return [
-      DogBreed(
-        id: '1',
-        name: '골든 리트리버',
-        origin: '영국',
-        description: '친절하고 충성스러운 견종입니다.',
-        imageUrl: 'https://example.com/golden.jpg',
-      ),
-    ];
+    try {
+      // 멀티파트 요청 생성
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/classify'),
+      );
+
+      // 파일 스트림 생성
+      var stream = http.ByteStream(DelegatingStream.typed(image.openRead()));
+      var length = await image.length();
+
+      // 멀티파트 파일 생성
+      var multipartFile = http.MultipartFile(
+        'image',
+        stream,
+        length,
+        filename: basename(image.path),
+      );
+
+      // 요청에 파일 추가
+      request.files.add(multipartFile);
+
+      // 요청 전송
+      var response = await request.send();
+
+      // 응답 처리
+      if (response.statusCode == 200) {
+        // 응답 본문 읽기
+        var responseData = await response.stream.bytesToString();
+        var result = json.decode(responseData);
+
+        // Flask 서버 응답으로부터 견종 정보 추출
+        String breedName = result['class']; // Flask 서버에서 반환하는 클래스 이름
+        double confidence = result['confidence']; // 신뢰도 (%)
+
+        // 견종 이름을 기반으로 추가 정보 가져오기
+        String description = await getWikipediaContent(breedName);
+        String? imageUrl = await getWikipediaImage(breedName);
+
+        // 분석 결과 반환
+        return [
+          DogBreed(
+            id: '1',
+            name: breedName,
+            origin: '분석 결과',
+            // 서버에서 제공하지 않는 정보는 기본값 설정
+            description: description,
+            imageUrl: imageUrl ?? 'https://example.com/default_dog.jpg',
+            confidence: confidence, // DogBreed 모델에 confidence 필드 추가 필요
+          ),
+        ];
+      } else {
+        throw Exception('서버 오류: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('이미지 분석 오류: $e');
+      // 오류 발생 시 기본 데이터 반환
+      return [
+        // 올바른 방식 (명명된 매개변수 사용)
+        DogBreed(
+          id: '1',
+          name: '분석 오류',
+          origin: '알 수 없음',
+          description: '이미지 분석 중 오류가 발생했습니다',
+          imageUrl: 'https://example.com/error.jpg',
+        ),
+      ];
+    }
   }
 
   Future<String?> getWikipediaImage(
@@ -91,7 +156,6 @@ class DogBreedService {
 
     return breeds;
   }
-
 
   Future<String> getWikipediaContent(
     String breedName, [

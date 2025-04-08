@@ -9,6 +9,7 @@ class DogBreed {
   final String? lifespan;
   final String? temperament;
   final LatLng? originLatLng;
+  final double? confidence; // 신뢰도 필드 추가
 
   DogBreed({
     required this.id,
@@ -21,9 +22,10 @@ class DogBreed {
     this.lifespan,
     this.temperament,
     this.originLatLng,
+    this.confidence, // 생성자에 추가
   });
 
-  // copyWith 메서드 추가
+  // copyWith 메서드 수정
   DogBreed copyWith({
     String? id,
     String? name,
@@ -35,6 +37,7 @@ class DogBreed {
     String? lifespan,
     String? temperament,
     LatLng? originLatLng,
+    double? confidence, // copyWith에 추가
   }) {
     return DogBreed(
       id: id ?? this.id,
@@ -47,6 +50,7 @@ class DogBreed {
       lifespan: lifespan ?? this.lifespan,
       temperament: temperament ?? this.temperament,
       originLatLng: originLatLng ?? this.originLatLng,
+      confidence: confidence ?? this.confidence, // 반환에 추가
     );
   }
 }

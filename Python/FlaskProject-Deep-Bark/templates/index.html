@@ -2,30 +2,169 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Deep-Bark</title>
-     <script>
-        function uploadImage() {
-            let formData = new FormData();
-            let imageFile = document.getElementById("imageInput").files[0];
-            formData.append("image", imageFile);
-
-            fetch("/classify", {
-                method: "POST",
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("result").innerHTML =
-                    `<h3>결과: ${data.class} (${data.confidence}%)</h3>`;
-            })
-            .catch(error => console.error("Error:", error));
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>강아지 품종 분류기</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
         }
-    </script>
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .upload-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .file-input {
+            display: none;
+        }
+        .file-label {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .submit-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .result-section {
+            margin-top: 30px;
+            text-align: center;
+        }
+        #preview {
+            max-width: 300px;
+            max-height: 300px;
+            margin: 20px auto;
+            display: none;
+            border-radius: 5px;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: none;
+            text-align: center;
+            font-size: 18px;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
- <h1>Deep-Bark Resnet50</h1>
-    <input type="file" id="imageInput">
-    <button onclick="uploadImage()">업로드 및 분석</button>
-    <div id="result"></div>
+    <div class="container">
+        <h1>말티즈/푸들 분류기</h1>
+
+        <div class="upload-section">
+            <form id="image-form" enctype="multipart/form-data">
+                <label for="image-input" class="file-label">이미지 선택</label>
+                <input type="file" id="image-input" name="image" class="file-input" accept="image/*">
+                <button type="submit" class="submit-btn" id="submit-btn" disabled>분석하기</button>
+            </form>
+        </div>
+
+        <div class="result-section">
+            <img id="preview" alt="미리보기">
+            <div class="loader" id="loader"></div>
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('image-form');
+        const resultDiv = document.getElementById('result');
+        const preview = document.getElementById('preview');
+        const imageInput = document.getElementById('image-input');
+        const submitBtn = document.getElementById('submit-btn');
+        const loader = document.getElementById('loader');
+
+        // 이미지 선택 시 미리보기 표시
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    submitBtn.disabled = false;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+                submitBtn.disabled = true;
+            }
+        });
+
+        // 폼 제출 처리
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // 로딩 표시
+            resultDiv.style.display = 'none';
+            loader.style.display = 'block';
+
+            const formData = new FormData(form);
+            try {
+                const response = await fetch('/classify', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error('서버 응답 오류');
+                }
+
+                const data = await response.json();
+
+                // 결과 표시
+                resultDiv.innerHTML = `
+                    <p><strong>분류 결과:</strong> ${data.class}</p>
+                    <p><strong>정확도:</strong> ${data.confidence}%</p>
+                `;
+
+                // 로딩 숨기고 결과 표시
+                loader.style.display = 'none';
+                resultDiv.style.display = 'block';
+
+            } catch (error) {
+                resultDiv.innerText = `오류: ${error.message}`;
+                loader.style.display = 'none';
+                resultDiv.style.display = 'block';
+                console.error('Error:', error);
+            }
+        });
+    </script>
 </body>
 </html>
