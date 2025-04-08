@@ -1,6 +1,7 @@
 // lib/screens/splash_screen.dart
 import 'package:flutter/material.dart';
-import 'dart:async';
+import 'package:provider/provider.dart';
+import '../services/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -11,37 +12,46 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Timer(Duration(seconds: 2), () {
+    _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    await Future.delayed(Duration(seconds: 2)); // 스플래시 화면 표시 시간
+
+    final authService = Provider.of<AuthService>(context, listen: false);
+
+    if (authService.isLoggedIn) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
       Navigator.pushReplacementNamed(context, '/login');
-    });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.brown,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 로고 이미지
             Image.asset(
               'assets/images/logo.png',
-              width: 200,
-              height: 200,
+              width: 150,
+              height: 150,
             ),
             SizedBox(height: 20),
             Text(
               '멍멍스캔',
               style: TextStyle(
+                color: Colors.white,
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: Colors.brown,
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 30),
             CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.brown),
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
             ),
           ],
         ),

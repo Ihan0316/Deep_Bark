@@ -15,6 +15,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
   File? _profileImage;
   final TextEditingController _nameController = TextEditingController();
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      await authService.checkCurrentUser(); // 사용자 정보 로드
+      setState(() {}); // UI 갱신
+    });
+  }
+
+
   Future<void> _getImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
@@ -27,6 +38,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+
+    // 디버깅용 출력
+    print('빌드 시 사용자 정보: ${authService.userName}, ${authService.userEmail}');
 
     return Scaffold(
       appBar: AppBar(
@@ -47,8 +61,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   backgroundColor: Colors.grey[300],
                   backgroundImage: _profileImage != null
                       ? FileImage(_profileImage!)
-                      : null,
-                  child: _profileImage == null
+                      : (authService.profileImageUrl.isNotEmpty
+                      ? NetworkImage(authService.profileImageUrl) as ImageProvider
+                      : null),
+                  child: (_profileImage == null && authService.profileImageUrl.isEmpty)
                       ? Icon(Icons.person, size: 60, color: Colors.grey[600])
                       : null,
                 ),
@@ -63,23 +79,69 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               SizedBox(height: 30),
 
-              // 사용자 정보
+              // 로그인 정보 표시 (소셜 로그인 포함)
               Card(
                 elevation: 2,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // 로그인 타입 표시
+                      if (authService.userId.startsWith('google'))
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: Row(
+                            children: [
+                              Icon(Icons.account_circle, color: Colors.blue),
+                              SizedBox(width: 8),
+                              Text(
+                                "Google 계정으로 로그인됨",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (authService.userId.startsWith('facebook'))
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: Row(
+                            children: [
+                              Icon(Icons.account_circle, color: Colors.indigo),
+                              SizedBox(width: 8),
+                              Text(
+                                "Facebook 계정으로 로그인됨",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.indigo,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                      // 이메일 정보
                       ListTile(
                         leading: Icon(Icons.email),
                         title: Text("이메일"),
-                        subtitle: Text(authService.userEmail),
+                        subtitle: Text(
+                          authService.userEmail,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
                       Divider(),
+
+                      // 이름 정보
                       ListTile(
                         leading: Icon(Icons.person),
                         title: Text("이름"),
-                        subtitle: Text(authService.userName),
+                        subtitle: Text(
+                          authService.userName,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                         trailing: Icon(Icons.edit),
                         onTap: () {
                           // 이름 수정 다이얼로그 표시
