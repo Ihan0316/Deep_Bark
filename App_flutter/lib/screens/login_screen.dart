@@ -156,9 +156,17 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
     });
 
+
     try {
-      await _authService.signInWithGoogle();
-      Navigator.pushReplacementNamed(context, '/home');
+      bool success = await _authService.signInWithGoogle();
+      if(success){
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+      else{
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('구글 로그인을 취소했습니다')),
+        );
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('구글 로그인 실패: ${e.toString()}')),
@@ -182,7 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.pushReplacementNamed(context, '/home');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('카카오 로그인에 실패했습니다')),
+          SnackBar(content: Text('카카오 로그인을 취소했습니다')),
         );
       }
     } catch (e) {
