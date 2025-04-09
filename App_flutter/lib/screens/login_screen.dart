@@ -67,26 +67,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   Navigator.pop(context);
                 },
               ),
-              ListTile(
-                title: Text('日本語'),
-                trailing: localeProvider.locale.languageCode == 'ja'
-                    ? Icon(Icons.check, color: Colors.brown)
-                    : null,
-                onTap: () {
-                  localeProvider.setLocale('ja');
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                title: Text('中文'),
-                trailing: localeProvider.locale.languageCode == 'zh'
-                    ? Icon(Icons.check, color: Colors.brown)
-                    : null,
-                onTap: () {
-                  localeProvider.setLocale('zh');
-                  Navigator.pop(context);
-                },
-              ),
             ],
           ),
         );

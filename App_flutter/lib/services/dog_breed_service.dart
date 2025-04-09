@@ -224,10 +224,6 @@ class DogBreedService {
         return '(영문)';
       case 'en':
         return '(English)';
-      case 'ja':
-        return '(英語)';
-      case 'zh':
-        return '(英文)';
       default:
         return '(English)';
     }
@@ -239,10 +235,6 @@ class DogBreedService {
         return '이 견종에 대한 위키백과 정보를 찾을 수 없습니다.';
       case 'en':
         return 'No Wikipedia information found for this breed.';
-      case 'ja':
-        return 'この犬種についてのウィキペディア情報が見つかりません。';
-      case 'zh':
-        return '找不到关于这个品种的维基百科信息。';
       default:
         return 'No Wikipedia information found for this breed.';
     }
@@ -254,10 +246,6 @@ class DogBreedService {
         return '위키백과 정보를 가져오는 중 오류가 발생했습니다: $error';
       case 'en':
         return 'Error occurred while fetching Wikipedia information: $error';
-      case 'ja':
-        return 'ウィキペディア情報の取得中にエラーが発生しました: $error';
-      case 'zh':
-        return '获取维基百科信息时发生错误: $error';
       default:
         return 'Error occurred while fetching Wikipedia information: $error';
     }
