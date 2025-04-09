@@ -79,14 +79,6 @@ class _HomeScreenState extends State<HomeScreen> {
           automaticallyImplyLeading: false,  // 뒤로가기 버튼 비활성화
           title: Text(localizations.translate('app_title')),
           backgroundColor: Colors.brown,
-          actions: [
-            IconButton(
-              icon: Icon(Icons.person),
-              onPressed: () {
-                Navigator.pushNamed(context, "/profile");
-              },
-            ),
-          ],
         ),
         body: SingleChildScrollView(
           child: Padding(
@@ -165,20 +157,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     backgroundColor: Colors.brown,
                     minimumSize: Size(double.infinity, 50),
                     disabledBackgroundColor: Colors.grey,
-                  ),
-                ),
-                SizedBox(height: 30),
-                // 멍멍백서 바로가기
-                OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pushNamed(context, "/encyclopedia");
-                  },
-                  icon: Icon(Icons.book),
-                  label: Text(localizations.translate('encyclopedia')),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.brown,
-                    side: BorderSide(color: Colors.brown),
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   ),
                 ),
               ],
