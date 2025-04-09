@@ -49,9 +49,10 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               ListTile(
                 title: Text('한국어'),
-                trailing: localeProvider.locale.languageCode == 'ko'
-                    ? Icon(Icons.check, color: Colors.brown)
-                    : null,
+                trailing:
+                    localeProvider.locale.languageCode == 'ko'
+                        ? Icon(Icons.check, color: Colors.brown)
+                        : null,
                 onTap: () {
                   localeProvider.setLocale('ko');
                   Navigator.pop(context);
@@ -59,9 +60,10 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               ListTile(
                 title: Text('English'),
-                trailing: localeProvider.locale.languageCode == 'en'
-                    ? Icon(Icons.check, color: Colors.brown)
-                    : null,
+                trailing:
+                    localeProvider.locale.languageCode == 'en'
+                        ? Icon(Icons.check, color: Colors.brown)
+                        : null,
                 onTap: () {
                   localeProvider.setLocale('en');
                   Navigator.pop(context);
@@ -80,97 +82,93 @@ class _LoginScreenState extends State<LoginScreen> {
     final localeProvider = Provider.of<LocaleProvider>(context);
 
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // 언어 선택 버튼 추가
-              Align(
-                alignment: Alignment.topRight,
-                child: IconButton(
-                  icon: Icon(Icons.language),
-                  onPressed: () => _showLanguageSelector(context),
-                  tooltip: localizations.translate('language_settings'),
-                ),
-              ),
-              // 로고
-              Image.asset(
-                'assets/images/logo.png',
-                width: 150,
-                height: 150,
-              ),
-              SizedBox(height: 30),
-              // 이메일 입력
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: localizations.translate('email'),
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.email),
-                ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              SizedBox(height: 15),
-              // 비밀번호 입력
-              TextField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: localizations.translate('password'),
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock),
-                ),
-                obscureText: true,
-              ),
-              SizedBox(height: 20),
-              // 로그인 버튼
-              _isLoading
-                  ? CircularProgressIndicator()
-                  : ElevatedButton(
-                onPressed: _login,
-                child: Text(localizations.translate('login')),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.brown,
-                  minimumSize: Size(double.infinity, 50),
-                ),
-              ),
-              SizedBox(height: 15),
-              // 회원가입 링크
-              TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/signup');
-                },
-                child: Text(localizations.translate('no_account_signup')),
-              ),
-              SizedBox(height: 30),
-              Text(localizations.translate('or_login_with_social')),
-              SizedBox(height: 15),
-              // 소셜 로그인 버튼들
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // 구글 로그인
-                  InkWell(
-                    onTap: _googleLogin,
-                    child: Image.asset(
-                      'assets/images/android_light.png',
-                      width: 300,
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  // 카카오 로그인
-                  InkWell(
-                    onTap: _kakaoLogin,
-                    child: Image.asset(
-                      'assets/images/kakao_login_medium_wide.png',
-                      width: 300,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.language, color: Colors.brown),
+            onPressed: () => _showLanguageSelector(context),
+            tooltip: localizations.translate('language_settings'),
           ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            // 로고
+            Image.asset('assets/images/logo.png', width: 150, height: 150),
+            SizedBox(height: 15),
+            // 이메일 입력
+            TextField(
+              controller: _emailController,
+              decoration: InputDecoration(
+                labelText: localizations.translate('email'),
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.email),
+              ),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            SizedBox(height: 15),
+            // 비밀번호 입력
+            TextField(
+              controller: _passwordController,
+              decoration: InputDecoration(
+                labelText: localizations.translate('password'),
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.lock),
+              ),
+              obscureText: true,
+            ),
+            SizedBox(height: 20),
+            // 로그인 버튼
+            _isLoading
+                ? CircularProgressIndicator()
+                : ElevatedButton(
+                  onPressed: _login,
+                  child: Text(localizations.translate('login')),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.brown,
+                    minimumSize: Size(double.infinity, 50),
+                  ),
+                ),
+            SizedBox(height: 15),
+            // 회원가입 링크
+            TextButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/signup');
+              },
+              child: Text(localizations.translate('no_account_signup')),
+            ),
+            SizedBox(height: 10),
+            Text(localizations.translate('or_login_with_social')),
+            SizedBox(height: 30),
+            // 소셜 로그인 버튼들
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // 구글 로그인
+                InkWell(
+                  onTap: _googleLogin,
+                  child: Image.asset(
+                    'assets/images/android_light.png',
+                    width: 300,
+                  ),
+                ),
+                SizedBox(height: 20),
+                // 카카오 로그인
+                InkWell(
+                  onTap: _kakaoLogin,
+                  child: Image.asset(
+                    'assets/images/kakao_login_medium.png',
+                    width: 300,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -181,7 +179,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(localizations.translate('enter_email_password'))),
+        SnackBar(
+          content: Text(localizations.translate('enter_email_password')),
+        ),
       );
       return;
     }
@@ -198,7 +198,11 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${localizations.translate('login_failed')}: ${e.toString()}')),
+        SnackBar(
+          content: Text(
+            '${localizations.translate('login_failed')}: ${e.toString()}',
+          ),
+        ),
       );
     } finally {
       setState(() {
@@ -216,17 +220,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       bool success = await _authService.signInWithGoogle();
-      if(success){
+      if (success) {
         Navigator.pushReplacementNamed(context, '/home');
-      }
-      else{
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(localizations.translate('google_login_canceled'))),
+          SnackBar(
+            content: Text(localizations.translate('google_login_canceled')),
+          ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${localizations.translate('google_login_failed')}: ${e.toString()}')),
+        SnackBar(
+          content: Text(
+            '${localizations.translate('google_login_failed')}: ${e.toString()}',
+          ),
+        ),
       );
     } finally {
       setState(() {
@@ -249,12 +258,18 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.pushReplacementNamed(context, '/home');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(localizations.translate('kakao_login_canceled'))),
+          SnackBar(
+            content: Text(localizations.translate('kakao_login_canceled')),
+          ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${localizations.translate('kakao_login_failed')}: ${e.toString()}')),
+        SnackBar(
+          content: Text(
+            '${localizations.translate('kakao_login_failed')}: ${e.toString()}',
+          ),
+        ),
       );
     } finally {
       setState(() {
