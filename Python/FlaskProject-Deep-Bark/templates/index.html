@@ -67,6 +67,18 @@
             text-align: center;
             font-size: 18px;
         }
+        .prediction {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .prediction-bar {
+            height: 20px;
+            background-color: #4CAF50;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
         .loader {
             border: 5px solid #f3f3f3;
             border-top: 5px solid #3498db;
@@ -149,10 +161,19 @@
                 const data = await response.json();
 
                 // 결과 표시
-                resultDiv.innerHTML = `
-                    <p><strong>분류 결과:</strong> ${data.class}</p>
-                    <p><strong>정확도:</strong> ${data.confidence}%</p>
-                `;
+                let resultHTML = '<h3>분류 결과</h3>';
+
+                // 상위 2개 예측 결과 표시
+                data.predictions.forEach((prediction, index) => {
+                    resultHTML += `
+                        <div class="prediction">
+                            <p><strong>${index + 1}. ${prediction.class}</strong> (${prediction.confidence}%)</p>
+                            <div class="prediction-bar" style="width: ${prediction.confidence}%"></div>
+                        </div>
+                    `;
+                });
+
+                resultDiv.innerHTML = resultHTML;
 
                 // 로딩 숨기고 결과 표시
                 loader.style.display = 'none';

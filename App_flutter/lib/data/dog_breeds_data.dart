@@ -48,7 +48,7 @@ class DogBreedsData {
       ),
       DogBreed(
         id: '4',
-        name: '시바 이누',
+        name: '시바견',
         origin: '일본',
         description: '독립적이고 용맹한 일본의 토종견으로 여우와 비슷한 외모가 특징입니다.',
         size: '소형',
@@ -56,6 +56,17 @@ class DogBreedsData {
         lifespan: '12-15년',
         temperament: '독립적, 용맹함, 경계심',
       ),
+      DogBreed(
+        id: '5',
+        name: '치와와',
+        origin: '멕시코',
+        description: '세계에서 가장 작은 견종 중 하나로, 용감하고 활기찬 성격을 가진 멕시코 원산의 견종입니다.',
+        size: '소형',
+        weight: '1.5-3kg',
+        lifespan: '12-20년',
+        temperament: '경계심 강한, 용감한, 충성스러운, 활발한',
+      ),
+
     ];
   }
   static List<DogBreed> _getEnglishBreeds() {
@@ -99,6 +110,16 @@ class DogBreedsData {
         weight: '8-10kg',
         lifespan: '12-15 years',
         temperament: 'Independent, Brave, Alert',
+      ),
+      DogBreed(
+        id: '5',
+        name: 'Chihuahua',
+        origin: 'Mexico',
+        description: 'One of the smallest dog breeds in the world, known for its courageous and lively temperament. Native to Mexico.',
+        size: 'Small',
+        weight: '1.5-3kg',
+        lifespan: '12-20 years',
+        temperament: 'Alert, Courageous, Loyal, Lively',
       ),
     ];
   }
@@ -144,6 +165,17 @@ class DogBreedsData {
         lifespan: '12-15年',
         temperament: '独立心、勇敢さ、警戒心',
       ),
+      DogBreed(
+        id: '5',
+        name: 'チワワ',
+        origin: 'メキシコ',
+        description: '世界で最も小さい犬種の一つで、勇敢で活発な性格で知られています。メキシコ原産。',
+        size: '小型',
+        weight: '1.5-3kg',
+        lifespan: '12-20年',
+        temperament: '警戒心が強い, 勇敢, 忠実, 活発',
+      ),
+
     ];
   }
   static List<DogBreed> _getChineseBreeds() {
@@ -188,6 +220,17 @@ class DogBreedsData {
         lifespan: '12-15年',
         temperament: '独立、勇敢、警惕',
       ),
+      DogBreed(
+        id: '5',
+        name: '吉娃娃',
+        origin: '墨西哥',
+        description: '世界上最小的犬种之一，以其勇敢和活泼的性格而闻名。原产于墨西哥。',
+        size: '小型',
+        weight: '1.5-3公斤',
+        lifespan: '12-20年',
+        temperament: '警觉, 勇敢, 忠诚, 活泼',
+      ),
+
     ];
   }
 }

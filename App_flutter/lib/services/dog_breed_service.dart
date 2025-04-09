@@ -45,26 +45,35 @@ class DogBreedService {
         var responseData = await response.stream.bytesToString();
         var result = json.decode(responseData);
 
-        // Flask 서버 응답으로부터 견종 정보 추출
-        String breedName = result['class']; // Flask 서버에서 반환하는 클래스 이름
-        double confidence = result['confidence']; // 신뢰도 (%)
+        // 결과 리스트 생성
+        List<DogBreed> breeds = [];
 
-        // 견종 이름을 기반으로 추가 정보 가져오기
-        String description = await getWikipediaContent(breedName);
-        String? imageUrl = await getWikipediaImage(breedName);
+        // 상위 2개 예측 결과 처리
+        List<dynamic> predictions = result['predictions'];
 
-        // 분석 결과 반환
-        return [
-          DogBreed(
-            id: '1',
-            name: breedName,
-            origin: '분석 결과',
-            // 서버에서 제공하지 않는 정보는 기본값 설정
-            description: description,
-            imageUrl: imageUrl ?? 'https://example.com/default_dog.jpg',
-            confidence: confidence, // DogBreed 모델에 confidence 필드 추가 필요
-          ),
-        ];
+        // 각 예측 결과에 대해 견종 정보 생성
+        for (var i = 0; i < predictions.length; i++) {
+          var prediction = predictions[i];
+          String breedName = prediction['class'];
+          double confidence = prediction['confidence'];
+
+          // 견종 이름을 기반으로 추가 정보 가져오기
+          String description = await getWikipediaContent(breedName);
+          String? imageUrl = await getWikipediaImage(breedName);
+
+          breeds.add(
+            DogBreed(
+              id: (i + 1).toString(),
+              name: breedName,
+              origin: '분석 결과',
+              description: description,
+              imageUrl: imageUrl ?? 'https://example.com/default_dog.jpg',
+              confidence: confidence,
+            ),
+          );
+        }
+
+        return breeds;
       } else {
         throw Exception('서버 오류: ${response.statusCode}');
       }
@@ -72,12 +81,11 @@ class DogBreedService {
       print('이미지 분석 오류: $e');
       // 오류 발생 시 기본 데이터 반환
       return [
-        // 올바른 방식 (명명된 매개변수 사용)
         DogBreed(
           id: '1',
           name: '분석 오류',
           origin: '알 수 없음',
-          description: '이미지 분석 중 오류가 발생했습니다',
+          description: '이미지 분석 중 오류가 발생했습니다: $e',
           imageUrl: 'https://example.com/error.jpg',
         ),
       ];
@@ -85,9 +93,9 @@ class DogBreedService {
   }
 
   Future<String?> getWikipediaImage(
-    String breedName, [
-    String languageCode = 'ko',
-  ]) async {
+      String breedName, [
+        String languageCode = 'ko',
+      ]) async {
     try {
       // 위키백과 API를 사용하여 이미지 정보 가져오기
       final url = Uri.parse(
@@ -158,9 +166,9 @@ class DogBreedService {
   }
 
   Future<String> getWikipediaContent(
-    String breedName, [
-    String languageCode = 'ko',
-  ]) async {
+      String breedName, [
+        String languageCode = 'ko',
+      ]) async {
     try {
       // 언어 코드에 따라 적절한 위키피디아 API URL 생성
       final url = Uri.parse(

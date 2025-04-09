@@ -59,15 +59,19 @@ def classify_image():
     with torch.no_grad():
         outputs = model(image_tensor)
         probabilities = torch.nn.functional.softmax(outputs, dim=1)
-        predicted_idx = torch.argmax(probabilities, 1).item()
-        confidence = probabilities[0, predicted_idx].item()
+        top_2_prob, top_2_idx = torch.topk(probabilities, 2)
 
     response_data = {
-        "class": class_names[predicted_idx],
-        "confidence": round(confidence * 100, 2),
+        "predictions": [
+            {
+                "class": class_names[top_2_idx[0][i].item()],
+                "confidence": round(top_2_prob[0][i].item() * 100, 2)
+            } for i in range(2)
+        ],
         "image_path": image_path
     }
     return jsonify(response_data)
+
 
 
 # Flask 서버 실행
