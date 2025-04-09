@@ -9,13 +9,15 @@ import 'package:geocoding/geocoding.dart';
 import '../services/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../services/locale_provider.dart';
+import 'package:google_maps_custom_marker/google_maps_custom_marker.dart';
 
 class DogEncyclopediaScreen extends StatefulWidget {
   @override
   _DogEncyclopediaScreenState createState() => _DogEncyclopediaScreenState();
 }
 
-class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen> with SingleTickerProviderStateMixin {
+class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
+    with SingleTickerProviderStateMixin {
   final DogBreedService _breedService = DogBreedService();
   List<models.DogBreed> _breeds = [];
   List<models.DogBreed> _filteredBreeds = [];
@@ -45,23 +47,17 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen> with Sing
 
   void _handleTabChange() {
     if (_tabController.index == 1) {
-      // 지도 탭으로 이동할 때 필요한 초기화 작업
-      setState(() {
-        _setupMarkers();
-      });
+      _setupMarkers().then((_) => setState(() {}));
     }
   }
 
   Future<void> _loadBreeds() async {
     try {
-      // 현재 언어 코드 가져오기
       final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
       final languageCode = localeProvider.locale.languageCode;
 
-      // 언어 코드 전달
       final breeds = await _breedService.getAllBreeds(languageCode);
 
-      // 원산지 좌표가 없는 경우 지오코딩으로 좌표 찾기
       List<models.DogBreed> updatedBreeds = [];
       for (var breed in breeds) {
         if (breed.originLatLng == null) {
@@ -89,42 +85,53 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen> with Sing
       setState(() {
         _breeds = updatedBreeds;
         _filteredBreeds = updatedBreeds;
-        _isLoading = false;
-        _setupMarkers();
       });
+
+      _setupMarkers().then((_) => setState(() {
+        _isLoading = false;
+      }));
     } catch (e) {
       setState(() {
         _isLoading = false;
       });
       final localizations = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(localizations.translate('failed_to_load_breeds') + ': ${e.toString()}')),
+        SnackBar(content: Text(
+            localizations.translate('failed_to_load_breeds') +
+                ': ${e.toString()}')),
       );
     }
   }
 
-  void _setupMarkers() {
-    _markers = _filteredBreeds.where((breed) => breed.originLatLng != null).map((breed) {
-      return Marker(
-        markerId: MarkerId(breed.id),
-        position: LatLng(
-            breed.originLatLng!.latitude,
-            breed.originLatLng!.longitude
+  Future<void> _setupMarkers() async {
+    _markers = Set<Marker>();
+    for (var breed in _filteredBreeds.where((breed) => breed.originLatLng != null)) {
+      Marker pawMarker = await GoogleMapsCustomMarker.createCustomMarker(
+        marker: Marker(
+          markerId: MarkerId(breed.id),
+          position: LatLng(
+              breed.originLatLng!.latitude,
+              breed.originLatLng!.longitude
+          ),
+          infoWindow: InfoWindow(
+            title: breed.name,
+            snippet: breed.origin,
+            onTap: () {
+              Navigator.pushNamed(
+                context,
+                '/breed_detail',
+                arguments: {'breed': breed},
+              );
+            },
+          ),
         ),
-        infoWindow: InfoWindow(
-          title: breed.name,
-          snippet: breed.origin,
-          onTap: () {
-            Navigator.pushNamed(
-              context,
-              '/breed_detail',
-              arguments: {'breed': breed},
-            );
-          },
-        ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+        shape: MarkerShape.circle,
+        backgroundColor: Colors.brown,
+        title: '🐾',
+        textStyle: TextStyle(fontSize: 20),
       );
-    }).toSet();
+      _markers.add(pawMarker);
+    }
   }
 
   void _filterBreeds(String query) {
@@ -137,8 +144,7 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen> with Sing
               breed.origin.toLowerCase().contains(query.toLowerCase());
         }).toList();
       }
-      // 필터링 후 마커 업데이트
-      _setupMarkers();
+      _setupMarkers().then((_) => setState(() {}));
     });
   }
 
@@ -230,22 +236,18 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen> with Sing
                 ),
                 _isLoading
                     ? Center(child: CircularProgressIndicator())
-                    : Stack(
-                  children: [
-                    GoogleMap(
-                      initialCameraPosition: CameraPosition(
-                        target: LatLng(30, 0),
-                        zoom: 2,
-                      ),
-                      markers: _markers,
-                      onMapCreated: (controller) {
-                        _mapController = controller;
-                      },
-                      gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                        Factory<EagerGestureRecognizer>(() => EagerGestureRecognizer()),
-                      },
-                    ),
-                  ],
+                    : GoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: LatLng(30, 0),
+                    zoom: 2,
+                  ),
+                  markers: _markers,
+                  onMapCreated: (controller) {
+                    _mapController = controller;
+                  },
+                  gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                    Factory<EagerGestureRecognizer>(() => EagerGestureRecognizer()),
+                  },
                 ),
               ],
             ),
