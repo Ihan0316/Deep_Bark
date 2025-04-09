@@ -161,11 +161,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 // 카카오 로그인
                 InkWell(
                   onTap: _kakaoLogin,
-                  child: Image.asset(
-                    'assets/images/kakao_login_medium.png',
+                  child: Provider.of<LocaleProvider>(context).locale.languageCode == 'ko'
+                      ? Image.asset(
+                    'assets/images/kakao_login_medium_ko.png',
+                    width: 300,
+                  )
+                      : Image.asset(
+                    'assets/images/kakao_login_medium_en.png',
                     width: 300,
                   ),
                 ),
+
               ],
             ),
           ],
