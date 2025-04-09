@@ -6,10 +6,22 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:async/async.dart';
+import 'image_cache_service.dart';
 
 class DogBreedService {
+  static final DogBreedService _instance = DogBreedService._internal();
+  factory DogBreedService() => _instance;
+  DogBreedService._internal();
+
+  final String baseUrl = 'http://10.0.2.2:5000';
+  final ImageCacheService _imageCache = ImageCacheService();
+  final Map<String, String> _contentCache = {};
+  final Map<String, String?> _imageUrlCache = {};
+  final Map<String, DogBreed> _breedCache = {};
+  final http.Client _httpClient = http.Client();
+  static const int _maxCacheSize = 100;
+
   // Flask 서버 URL (실제 서버 주소로 변경 필요)
-  final String baseUrl = 'http://10.0.2.2:5000'; // Android 에뮬레이터에서 로컬호스트 접근용
   // 실제 기기나 iOS 시뮬레이터에서는 실제 IP 주소 사용 필요
   // 예: final String baseUrl = 'http://192.168.0.100:5000';
 
@@ -44,59 +56,46 @@ class DogBreedService {
 
   Future<List<DogBreed>> analyzeImage(File image) async {
     try {
-      // 멀티파트 요청 생성
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse('$baseUrl/classify'),
-      );
-
-      // 파일 스트림 생성
+      var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/classify'));
       var stream = http.ByteStream(DelegatingStream.typed(image.openRead()));
       var length = await image.length();
-
-      // 멀티파트 파일 생성
-      var multipartFile = http.MultipartFile(
-        'image',
-        stream,
-        length,
-        filename: basename(image.path),
-      );
-
-      // 요청에 파일 추가
+      var multipartFile = http.MultipartFile('image', stream, length, filename: basename(image.path));
       request.files.add(multipartFile);
 
-      // 요청 전송
-      var response = await request.send();
-
-      // 응답 처리
+      var response = await _httpClient.send(request);
       if (response.statusCode == 200) {
-        // 응답 본문 읽기
         var responseData = await response.stream.bytesToString();
         var result = json.decode(responseData);
-
-        // 결과 리스트 생성
-        List<DogBreed> breeds = [];
-
-        // 상위 2개 예측 결과 처리
         List<dynamic> predictions = result['predictions'];
 
-        // 각 예측 결과에 대해 견종 정보 생성
-        for (var i = 0; i < predictions.length; i++) {
-          var prediction = predictions[i];
+        // 병렬 처리를 위한 Future 리스트
+        List<Future<DogBreed>> breedFutures = predictions.map((prediction) async {
           String englishBreedName = prediction['class'];
           String koreanBreedName = _convertBreedNameToKorean(englishBreedName);
           double confidence = prediction['confidence'];
 
-          // 견종 이름을 기반으로 추가 정보 가져오기
-          String description = await getWikipediaContent(koreanBreedName);
-          String? imageUrl = await getWikipediaImage(koreanBreedName);
+          // 캐시된 견종 정보 확인
+          if (_breedCache.containsKey(koreanBreedName)) {
+            return _breedCache[koreanBreedName]!.copyWith(confidence: confidence);
+          }
 
-          // 모든 견종 데이터에서 해당 견종 정보 가져오기
+          // 캐시된 내용 확인
+          String? cachedContent = _contentCache[koreanBreedName];
+          String? cachedImageUrl = _imageUrlCache[koreanBreedName];
+
+          // 캐시된 내용이 없는 경우에만 API 호출
+          String description = cachedContent ?? await getWikipediaContent(koreanBreedName);
+          String? imageUrl = cachedImageUrl ?? await getWikipediaImage(koreanBreedName);
+
+          // 캐시 업데이트
+          if (cachedContent == null) _contentCache[koreanBreedName] = description;
+          if (cachedImageUrl == null) _imageUrlCache[koreanBreedName] = imageUrl;
+
           List<DogBreed> allBreeds = await getAllBreeds('ko');
           DogBreed? matchingBreed = allBreeds.firstWhere(
             (breed) => breed.name.toLowerCase() == koreanBreedName.toLowerCase(),
             orElse: () => DogBreed(
-              id: (i + 1).toString(),
+              id: predictions.indexOf(prediction).toString(),
               name: koreanBreedName,
               origin: '알 수 없음',
               description: description,
@@ -107,29 +106,30 @@ class DogBreedService {
             ),
           );
 
-          breeds.add(
-            DogBreed(
-              id: (i + 1).toString(),
-              name: koreanBreedName,
-              origin: matchingBreed.origin,
-              description: description,
-              imageUrl: imageUrl ?? matchingBreed.imageUrl,
-              size: matchingBreed.size ?? '-',
-              weight: matchingBreed.weight ?? '-',
-              lifespan: matchingBreed.lifespan ?? '-',
-              temperament: matchingBreed.temperament ?? '-',
-              confidence: confidence,
-            ),
+          final breed = DogBreed(
+            id: predictions.indexOf(prediction).toString(),
+            name: koreanBreedName,
+            origin: matchingBreed.origin,
+            description: description,
+            imageUrl: imageUrl ?? matchingBreed.imageUrl,
+            size: matchingBreed.size ?? '-',
+            weight: matchingBreed.weight ?? '-',
+            lifespan: matchingBreed.lifespan ?? '-',
+            temperament: matchingBreed.temperament ?? '-',
+            confidence: confidence,
           );
-        }
 
-        return breeds;
+          // 견종 정보 캐시
+          _addToBreedCache(koreanBreedName, breed);
+          return breed;
+        }).toList();
+
+        return await Future.wait(breedFutures);
       } else {
         throw Exception('서버 오류: ${response.statusCode}');
       }
     } catch (e) {
       print('이미지 분석 오류: $e');
-      // 오류 발생 시 기본 데이터 반환
       return [
         DogBreed(
           id: '1',
@@ -142,20 +142,25 @@ class DogBreedService {
     }
   }
 
-  Future<String?> getWikipediaImage(
-      String breedName, [
-        String languageCode = 'ko',
-      ]) async {
+  void _addToBreedCache(String name, DogBreed breed) {
+    if (_breedCache.length >= _maxCacheSize) {
+      _breedCache.remove(_breedCache.keys.first);
+    }
+    _breedCache[name] = breed;
+  }
+
+  Future<String?> getWikipediaImage(String breedName, [String languageCode = 'ko']) async {
+    if (_imageUrlCache.containsKey(breedName)) {
+      return _imageUrlCache[breedName];
+    }
+
     try {
-      // 위키백과 API를 사용하여 이미지 정보 가져오기
       final url = Uri.parse(
         'https://${languageCode}.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles=${Uri.encodeComponent(breedName)}',
       );
-      final response = await http.get(
+      final response = await _httpClient.get(
         url,
-        headers: {
-          'User-Agent': 'MyApp/1.0 (https://myapp.com; myapp@example.com)',
-        },
+        headers: {'User-Agent': 'MyApp/1.0 (https://myapp.com; myapp@example.com)'},
       );
 
       if (response.statusCode == 200) {
@@ -163,22 +168,20 @@ class DogBreedService {
         final pages = data['query']['pages'];
         final pageId = pages.keys.first;
 
-        // 페이지가 존재하고 이미지가 있는 경우
         if (pageId != '-1' && pages[pageId]['original'] != null) {
-          return pages[pageId]['original']['source'];
+          final imageUrl = pages[pageId]['original']['source'];
+          _imageUrlCache[breedName] = imageUrl;
+          return imageUrl;
         }
 
-        // 현재 언어 위키백과에 없는 경우 영어 위키백과 시도
         if (languageCode != 'en') {
           final enUrl = Uri.parse(
             'https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&format=json&piprop=original&titles=${Uri.encodeComponent(breedName)}',
           );
 
-          final enResponse = await http.get(
+          final enResponse = await _httpClient.get(
             enUrl,
-            headers: {
-              'User-Agent': 'MyApp/1.0 (https://myapp.com; myapp@example.com)',
-            },
+            headers: {'User-Agent': 'MyApp/1.0 (https://myapp.com; myapp@example.com)'},
           );
 
           if (enResponse.statusCode == 200) {
@@ -187,12 +190,15 @@ class DogBreedService {
             final enPageId = enPages.keys.first;
 
             if (enPageId != '-1' && enPages[enPageId]['original'] != null) {
-              return enPages[enPageId]['original']['source'];
+              final imageUrl = enPages[enPageId]['original']['source'];
+              _imageUrlCache[breedName] = imageUrl;
+              return imageUrl;
             }
           }
         }
       }
 
+      _imageUrlCache[breedName] = null;
       return null;
     } catch (e) {
       print('위키백과 이미지를 가져오는 중 오류 발생: $e');
@@ -201,16 +207,20 @@ class DogBreedService {
   }
 
   Future<List<DogBreed>> getAllBreeds([String languageCode = 'ko']) async {
-    // 초기 견종 데이터 가져오기 - 언어 코드 전달
     List<DogBreed> breeds = DogBreedsData.getInitialBreeds(languageCode);
-
-    // 모든 견종에 대해 위키백과 이미지를 병렬로 가져오기
+    
+    // 캐시된 견종 정보가 있는지 확인
     List<Future<DogBreed>> breedFutures = breeds.map((breed) async {
-      final imageUrl = await getWikipediaImage(breed.name, languageCode);
-      return imageUrl != null ? breed.copyWith(imageUrl: imageUrl) : breed;
+      if (_breedCache.containsKey(breed.name)) {
+        return _breedCache[breed.name]!;
+      }
+
+      String? imageUrl = _imageUrlCache[breed.name] ?? await getWikipediaImage(breed.name, languageCode);
+      final updatedBreed = imageUrl != null ? breed.copyWith(imageUrl: imageUrl) : breed;
+      _addToBreedCache(breed.name, updatedBreed);
+      return updatedBreed;
     }).toList();
 
-    // 모든 Future가 완료될 때까지 기다림
     return await Future.wait(breedFutures);
   }
 
@@ -223,7 +233,7 @@ class DogBreedService {
       final url = Uri.parse(
         'https://${languageCode}.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro=true&explaintext=true&titles=${Uri.encodeComponent(breedName)}',
       );
-      final response = await http.get(url);
+      final response = await _httpClient.get(url);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final pages = data['query']['pages'];
@@ -243,7 +253,7 @@ class DogBreedService {
             'https://en.wikipedia.org/w/api.php?format=json&action=query&prop=extracts&exintro=true&explaintext=true&titles=${Uri.encodeComponent(breedName)}',
           );
 
-          final enResponse = await http.get(enUrl);
+          final enResponse = await _httpClient.get(enUrl);
 
           if (enResponse.statusCode == 200) {
             final enData = json.decode(enResponse.body);
@@ -302,5 +312,12 @@ class DogBreedService {
       default:
         return 'Error occurred while fetching Wikipedia information: $error';
     }
+  }
+
+  void dispose() {
+    _httpClient.close();
+    _contentCache.clear();
+    _imageUrlCache.clear();
+    _breedCache.clear();
   }
 }

@@ -5,6 +5,7 @@ import '../models/dog_breed_model.dart';
 import '../services/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../services/locale_provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ScanResultScreen extends StatelessWidget {
   @override
@@ -98,7 +99,7 @@ class ScanResultScreen extends StatelessWidget {
                   CircleAvatar(
                     radius: 30,
                     backgroundImage: breed.imageUrl != null
-                        ? NetworkImage(breed.imageUrl!)
+                        ? CachedNetworkImageProvider(breed.imageUrl!)
                         : AssetImage('assets/images/dog_placeholder.png') as ImageProvider,
                   ),
                   SizedBox(width: 16),

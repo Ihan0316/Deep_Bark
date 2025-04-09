@@ -6,6 +6,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../services/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../services/locale_provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class BreedDetailScreen extends StatefulWidget {
   @override
@@ -100,17 +101,21 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
                 Container(
                   width: double.infinity,
                   height: 250,
-                  child: Image.network(
-                    breed.imageUrl!,
+                  child: CachedNetworkImage(
+                    imageUrl: breed.imageUrl!,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[300],
-                        child: Center(
-                          child: Icon(Icons.pets, size: 80, color: Colors.grey[600]),
-                        ),
-                      );
-                    },
+                    placeholder: (context, url) => Container(
+                      color: Colors.grey[300],
+                      child: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      color: Colors.grey[300],
+                      child: Center(
+                        child: Icon(Icons.pets, size: 80, color: Colors.grey[600]),
+                      ),
+                    ),
                   ),
                 ),
 
