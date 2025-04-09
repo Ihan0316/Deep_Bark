@@ -28,8 +28,6 @@ class LocaleProvider extends ChangeNotifier {
     switch (_locale.languageCode) {
       case 'ko': return '한국어';
       case 'en': return 'English';
-      case 'ja': return '日本語';
-      case 'zh': return '中文';
       default: return '한국어';
     }
   }
@@ -39,8 +37,6 @@ class LocaleProvider extends ChangeNotifier {
     switch (languageName) {
       case '한국어': return 'ko';
       case 'English': return 'en';
-      case '日本語': return 'ja';
-      case '中文': return 'zh';
       default: return 'ko';
     }
   }

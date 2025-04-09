@@ -82,8 +82,6 @@ class MyApp extends StatelessWidget {
           supportedLocales: [
             Locale('ko', ''), // 한국어
             Locale('en', ''), // 영어
-            Locale('ja', ''), // 일본어
-            Locale('zh', ''), // 중국어
           ],
           localizationsDelegates: [
             AppLocalizations.delegate,  // 사용자 정의 번역

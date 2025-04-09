@@ -5,10 +5,6 @@ class DogBreedsData {
     switch (languageCode) {
       case 'en':
         return _getEnglishBreeds();
-      case 'ja':
-        return _getJapaneseBreeds();
-      case 'zh':
-        return _getChineseBreeds();
       case 'ko':
       default:
         return _getKoreanBreeds();
@@ -121,116 +117,6 @@ class DogBreedsData {
         lifespan: '12-20 years',
         temperament: 'Alert, Courageous, Loyal, Lively',
       ),
-    ];
-  }
-  static List<DogBreed> _getJapaneseBreeds() {
-    return [
-      DogBreed(
-        id: '1',
-        name: 'ゴールデン・レトリーバー',
-        origin: 'イギリス',
-        description: '優しく忠実な犬種です。',
-        size: '中型〜大型',
-        weight: '25-34kg',
-        lifespan: '10-12年',
-        temperament: '優しさ、忠実さ、知性',
-      ),
-      DogBreed(
-        id: '2',
-        name: 'ウェルシュ・コーギー',
-        origin: 'ウェールズ',
-        description: '活発で知的な犬種で、短い足と長い胴体が特徴です。',
-        size: '小型',
-        weight: '10-14kg',
-        lifespan: '12-15年',
-        temperament: '活発さ、知性、忠実さ',
-      ),
-      DogBreed(
-        id: '3',
-        name: '珍島犬',
-        origin: '韓国 珍島',
-        description: '勇敢で忠実な韓国原産の犬種で、優れた狩猟能力を持っています。',
-        size: '中型',
-        weight: '18-23kg',
-        lifespan: '12-14年',
-        temperament: '勇敢さ、忠実さ、独立心',
-      ),
-      DogBreed(
-        id: '4',
-        name: '柴犬',
-        origin: '日本',
-        description: '独立心が強く勇敢な日本原産の犬種で、キツネに似た外見が特徴です。',
-        size: '小型',
-        weight: '8-10kg',
-        lifespan: '12-15年',
-        temperament: '独立心、勇敢さ、警戒心',
-      ),
-      DogBreed(
-        id: '5',
-        name: 'チワワ',
-        origin: 'メキシコ',
-        description: '世界で最も小さい犬種の一つで、勇敢で活発な性格で知られています。メキシコ原産。',
-        size: '小型',
-        weight: '1.5-3kg',
-        lifespan: '12-20年',
-        temperament: '警戒心が強い, 勇敢, 忠実, 活発',
-      ),
-
-    ];
-  }
-  static List<DogBreed> _getChineseBreeds() {
-    return [
-      DogBreed(
-        id: '1',
-        name: '金毛寻回犬',
-        origin: '英国',
-        description: '友善且忠诚的犬种。',
-        size: '中型至大型',
-        weight: '25-34公斤',
-        lifespan: '10-12年',
-        temperament: '友善、忠诚、聪明',
-      ),
-      DogBreed(
-        id: '2',
-        name: '威尔士柯基犬',
-        origin: '威尔士',
-        description: '活泼聪明的犬种，短腿长身是其特点。',
-        size: '小型',
-        weight: '10-14公斤',
-        lifespan: '12-15年',
-        temperament: '活泼、聪明、忠诚',
-      ),
-      DogBreed(
-        id: '3',
-        name: '珍岛犬',
-        origin: '韩国珍岛',
-        description: '勇敢忠诚的韩国本土犬种，拥有出色的狩猎能力。',
-        size: '中型',
-        weight: '18-23公斤',
-        lifespan: '12-14年',
-        temperament: '勇敢、忠诚、独立',
-      ),
-      DogBreed(
-        id: '4',
-        name: '柴犬',
-        origin: '日本',
-        description: '独立且勇敢的日本本土犬种，外形像狐狸。',
-        size: '小型',
-        weight: '8-10公斤',
-        lifespan: '12-15年',
-        temperament: '独立、勇敢、警惕',
-      ),
-      DogBreed(
-        id: '5',
-        name: '吉娃娃',
-        origin: '墨西哥',
-        description: '世界上最小的犬种之一，以其勇敢和活泼的性格而闻名。原产于墨西哥。',
-        size: '小型',
-        weight: '1.5-3公斤',
-        lifespan: '12-20年',
-        temperament: '警觉, 勇敢, 忠诚, 活泼',
-      ),
-
     ];
   }
 }

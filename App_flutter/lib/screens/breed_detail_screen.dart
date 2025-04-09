@@ -72,8 +72,6 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
       switch(langCode) {
         case 'ko': return 'https://ko.wikipedia.org/wiki/${breed.name}';
         case 'en': return 'https://en.wikipedia.org/wiki/${breed.name}';
-        case 'ja': return 'https://ja.wikipedia.org/wiki/${breed.name}';
-        case 'zh': return 'https://zh.wikipedia.org/wiki/${breed.name}';
         default: return 'https://ko.wikipedia.org/wiki/${breed.name}';
       }
     }
