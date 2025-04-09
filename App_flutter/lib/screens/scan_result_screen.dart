@@ -65,22 +65,6 @@ class ScanResultScreen extends StatelessWidget {
               ),
 
               SizedBox(height: 24),
-
-              if (results.isNotEmpty)
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/encyclopedia',
-                      arguments: {'breed': results[0]},
-                    );
-                  },
-                  icon: Icon(Icons.book),
-                  label: Text(localizations.translate('learn_more_in_encyclopedia')),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(double.infinity, 50),
-                  ),
-                ),
             ],
           ),
         ),

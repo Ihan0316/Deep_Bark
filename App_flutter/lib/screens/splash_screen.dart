@@ -9,14 +9,25 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  bool _isCheckingAuth = false;
+
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
+    // 중복 호출 방지를 위한 플래그 사용
+    if (!_isCheckingAuth) {
+      _checkLoginStatus();
+    }
   }
 
   Future<void> _checkLoginStatus() async {
-    await Future.delayed(Duration(seconds: 2)); // 스플래시 화면 표시 시간
+    _isCheckingAuth = true;
+
+    // 스플래시 화면 표시 시간
+    await Future.delayed(Duration(seconds: 2));
+
+    // 컨텍스트가 유효한지 확인
+    if (!mounted) return;
 
     final authService = Provider.of<AuthService>(context, listen: false);
 
@@ -25,6 +36,8 @@ class _SplashScreenState extends State<SplashScreen> {
     } else {
       Navigator.pushReplacementNamed(context, '/login');
     }
+
+    _isCheckingAuth = false;
   }
 
   @override
