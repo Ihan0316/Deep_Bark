@@ -62,6 +62,16 @@ class DogBreedsData {
         lifespan: '12-20년',
         temperament: '경계심 강한, 용감한, 충성스러운, 활발한',
       ),
+      DogBreed(
+        id: '6',
+        name: '닥스훈트',
+        origin: '독일',
+        description: '길쭉한 몸과 짧은 다리를 가진 소형견입니다. 원래 오소리와 같은 굴을 파는 동물을 사냥하기 위해 육종되었습니다. 장난기 많고 고집스러운 성격으로 알려져 있습니다.',
+        size: '소형',
+        weight: '7-15kg',
+        lifespan: '12-16년',
+        temperament: '영리함, 용감함, 고집스러움, 장난기 많음, 충성스러움',
+      ),
 
     ];
   }
@@ -109,13 +119,23 @@ class DogBreedsData {
       ),
       DogBreed(
         id: '5',
-        name: 'Chihuahua',
+        name: 'Chihuahua (dog breed)',
         origin: 'Mexico',
         description: 'One of the smallest dog breeds in the world, known for its courageous and lively temperament. Native to Mexico.',
         size: 'Small',
         weight: '1.5-3kg',
         lifespan: '12-20 years',
         temperament: 'Alert, Courageous, Loyal, Lively',
+      ),
+      DogBreed(
+        id: '6',
+        name: 'Dachshund',
+        origin: 'Germany',
+        description: 'A small breed with a long body and short legs. Originally bred for hunting badgers and other tunneling animals. Known for their playful and stubborn personality.',
+        size: 'Small',
+        weight: '7-15kg',
+        lifespan: '12-16 years',
+        temperament: 'Clever, Courageous, Stubborn, Playful, Devoted',
       ),
     ];
   }

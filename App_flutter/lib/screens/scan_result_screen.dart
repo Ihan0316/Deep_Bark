@@ -112,9 +112,7 @@ class ScanResultScreen extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
                           ),
-                        ),
-                        SizedBox(height: 4),
-                        Text('${localizations.translate('origin')}: ${breed.origin}'),
+                        )
                       ],
                     ),
                   ),

@@ -137,11 +137,11 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
                               ),
                             ),
                             SizedBox(height: 12),
-                            _buildInfoRow(localizations.translate('origin'), breed.origin),
-                            _buildInfoRow(localizations.translate('size'), breed.size ?? localizations.translate('no_info')),
-                            _buildInfoRow(localizations.translate('weight'), breed.weight ?? localizations.translate('no_info')),
-                            _buildInfoRow(localizations.translate('lifespan'), breed.lifespan ?? localizations.translate('no_info')),
-                            _buildInfoRow(localizations.translate('temperament'), breed.temperament ?? localizations.translate('no_info')),
+                            _buildInfoRow(localizations.translate('origin'), breed.origin ?? '-'),
+                            _buildInfoRow(localizations.translate('size'), breed.size ?? '-'),
+                            _buildInfoRow(localizations.translate('weight'), breed.weight ?? '-'),
+                            _buildInfoRow(localizations.translate('lifespan'), breed.lifespan ?? '-'),
+                            _buildInfoRow(localizations.translate('temperament'), breed.temperament ?? '-'),
                           ],
                         ),
                       ),
@@ -166,14 +166,28 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
                       ),
                     )
                         : _wikiContent == null
-                        ? Text(localizations.translate('cannot_load_details'))
-                        : Text(
-                      _wikiContent!,
-                      style: TextStyle(
-                        fontSize: 16,
-                        height: 1.5,
-                      ),
-                    ),
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Text(
+                                localizations.translate('cannot_load_details'),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ),
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Text(
+                              _wikiContent!,
+                              style: TextStyle(
+                                fontSize: 16,
+                                height: 1.5,
+                              ),
+                            ),
+                          ),
 
                     SizedBox(height: 20),
 

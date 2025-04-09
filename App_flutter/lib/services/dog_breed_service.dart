@@ -13,6 +13,35 @@ class DogBreedService {
   // 실제 기기나 iOS 시뮬레이터에서는 실제 IP 주소 사용 필요
   // 예: final String baseUrl = 'http://192.168.0.100:5000';
 
+  // 영어 견종 이름을 한글로 변환하는 메서드
+  String _convertBreedNameToKorean(String englishName) {
+    // 영어-한글 견종 이름 매핑
+    final Map<String, String> breedNameMap = {
+      'Golden Retriever': '골든 리트리버',
+      'Welsh Corgi': '웰시 코기',
+      'Korean Jindo': '진돗개',
+      'Shiba Inu': '시바견',
+      'Chihuahua': '치와와',
+      'Dachshund': '닥스훈트',
+      'Labrador Retriever': '래브라도 리트리버',
+      'German Shepherd': '저먼 셰퍼드',
+      'Poodle': '푸들',
+      'Beagle': '비글',
+      'Bulldog': '불독',
+      'Pomeranian': '포메라니안',
+      'Husky': '허스키',
+      'Maltese': '말티즈',
+      'Shih Tzu': '시츄',
+      'Yorkshire Terrier': '요크셔 테리어',
+      'Bichon Frise': '비숑 프리제',
+      'Cocker Spaniel': '코커 스패니얼',
+      'Border Collie': '보더 콜리',
+      'Samoyed': '사모예드',
+    };
+
+    return breedNameMap[englishName] ?? englishName;
+  }
+
   Future<List<DogBreed>> analyzeImage(File image) async {
     try {
       // 멀티파트 요청 생성
@@ -54,20 +83,41 @@ class DogBreedService {
         // 각 예측 결과에 대해 견종 정보 생성
         for (var i = 0; i < predictions.length; i++) {
           var prediction = predictions[i];
-          String breedName = prediction['class'];
+          String englishBreedName = prediction['class'];
+          String koreanBreedName = _convertBreedNameToKorean(englishBreedName);
           double confidence = prediction['confidence'];
 
           // 견종 이름을 기반으로 추가 정보 가져오기
-          String description = await getWikipediaContent(breedName);
-          String? imageUrl = await getWikipediaImage(breedName);
+          String description = await getWikipediaContent(koreanBreedName);
+          String? imageUrl = await getWikipediaImage(koreanBreedName);
+
+          // 모든 견종 데이터에서 해당 견종 정보 가져오기
+          List<DogBreed> allBreeds = await getAllBreeds('ko');
+          DogBreed? matchingBreed = allBreeds.firstWhere(
+            (breed) => breed.name.toLowerCase() == koreanBreedName.toLowerCase(),
+            orElse: () => DogBreed(
+              id: (i + 1).toString(),
+              name: koreanBreedName,
+              origin: '알 수 없음',
+              description: description,
+              size: '-',
+              weight: '-',
+              lifespan: '-',
+              temperament: '-',
+            ),
+          );
 
           breeds.add(
             DogBreed(
               id: (i + 1).toString(),
-              name: breedName,
-              origin: '분석 결과',
+              name: koreanBreedName,
+              origin: matchingBreed.origin,
               description: description,
-              imageUrl: imageUrl ?? 'https://example.com/default_dog.jpg',
+              imageUrl: imageUrl ?? matchingBreed.imageUrl,
+              size: matchingBreed.size ?? '-',
+              weight: matchingBreed.weight ?? '-',
+              lifespan: matchingBreed.lifespan ?? '-',
+              temperament: matchingBreed.temperament ?? '-',
               confidence: confidence,
             ),
           );
@@ -154,15 +204,14 @@ class DogBreedService {
     // 초기 견종 데이터 가져오기 - 언어 코드 전달
     List<DogBreed> breeds = DogBreedsData.getInitialBreeds(languageCode);
 
-    // 각 견종에 대해 위키백과 이미지 가져오기
-    for (var i = 0; i < breeds.length; i++) {
-      final imageUrl = await getWikipediaImage(breeds[i].name, languageCode);
-      if (imageUrl != null) {
-        breeds[i] = breeds[i].copyWith(imageUrl: imageUrl);
-      }
-    }
+    // 모든 견종에 대해 위키백과 이미지를 병렬로 가져오기
+    List<Future<DogBreed>> breedFutures = breeds.map((breed) async {
+      final imageUrl = await getWikipediaImage(breed.name, languageCode);
+      return imageUrl != null ? breed.copyWith(imageUrl: imageUrl) : breed;
+    }).toList();
 
-    return breeds;
+    // 모든 Future가 완료될 때까지 기다림
+    return await Future.wait(breedFutures);
   }
 
   Future<String> getWikipediaContent(
@@ -204,7 +253,11 @@ class DogBreedService {
             if (enPageId != '-1') {
               final enExtract = enPages[enPageId]['extract'];
               if (enExtract != null && enExtract.isNotEmpty) {
-                return getNoInfoMessage(languageCode) + ' ' + enExtract;
+                // 한국어인 경우 영어 내용임을 표시
+                if (languageCode == 'ko') {
+                  return '(영문) ' + enExtract;
+                }
+                return enExtract;
               }
             }
           }
