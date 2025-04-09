@@ -72,123 +72,93 @@ class _HomeScreenState extends State<HomeScreen> {
     final localizations = AppLocalizations.of(context);
     final localeProvider = Provider.of<LocaleProvider>(context);
 
-    return WillPopScope(
-      onWillPop: () async => false, // 뒤로가기 동작 방지
-      child: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: false,  // 뒤로가기 버튼 비활성화
-          title: Text(localizations.translate('app_title')),
-          backgroundColor: Colors.brown,
-        ),
-        body: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(height: 20),
-                Text(
-                  localizations.translate('scan_dog'),
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,  // 뒤로가기 버튼 비활성화
+        title: Text(localizations.translate('app_title')),
+        backgroundColor: Colors.brown,
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(height: 20),
+              Text(
+                localizations.translate('scan_dog'),
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
                 ),
-                SizedBox(height: 30),
-                // 이미지 표시 영역
-                Container(
-                  width: double.infinity,
-                  height: 300,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: Colors.grey),
-                  ),
-                  child: _image == null
-                      ? Center(
-                    child: Icon(
-                      Icons.pets,
-                      size: 100,
-                      color: Colors.grey[400],
-                    ),
-                  )
-                      : ClipRRect(
-                    borderRadius: BorderRadius.circular(15),
-                    child: Image.file(
-                      _image!,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+              ),
+              SizedBox(height: 30),
+              // 이미지 표시 영역
+              Container(
+                width: double.infinity,
+                height: 300,
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.grey),
                 ),
-                SizedBox(height: 30),
-                // 이미지 업로드 버튼
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: _getImageFromCamera,
-                      icon: Icon(Icons.camera_alt),
-                      label: Text(localizations.translate('camera')),
+                child: _image == null
+                    ? Center(
+                        child: Icon(
+                          Icons.pets,
+                          size: 100,
+                          color: Colors.grey[400],
+                        ),
+                      )
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(15),
+                        child: Image.file(
+                          _image!,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+              ),
+              SizedBox(height: 30),
+              // 이미지 업로드 버튼
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: _getImageFromCamera,
+                    icon: Icon(Icons.camera_alt),
+                    label: Text(localizations.translate('camera')),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.brown,
+                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    ),
+                  ),
+                  SizedBox(width: 20),
+                  ElevatedButton.icon(
+                    onPressed: _getImageFromGallery,
+                    icon: Icon(Icons.photo_library),
+                    label: Text(localizations.translate('gallery')),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.brown,
+                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 30),
+              // 분석 버튼
+              _isAnalyzing
+                  ? CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _image == null ? null : _analyzeImage,
+                      child: Text(localizations.translate('analyze')),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.brown,
-                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        minimumSize: Size(double.infinity, 50),
+                        disabledBackgroundColor: Colors.grey,
                       ),
                     ),
-                    SizedBox(width: 20),
-                    ElevatedButton.icon(
-                      onPressed: _getImageFromGallery,
-                      icon: Icon(Icons.photo_library),
-                      label: Text(localizations.translate('gallery')),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.brown,
-                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 30),
-                // 분석 버튼
-                _isAnalyzing
-                    ? CircularProgressIndicator()
-                    : ElevatedButton(
-                  onPressed: _image == null ? null : _analyzeImage,
-                  child: Text(localizations.translate('analyze')),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.brown,
-                    minimumSize: Size(double.infinity, 50),
-                    disabledBackgroundColor: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
+            ],
           ),
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: 0,
-          selectedItemColor: Colors.brown,
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.pets),
-              label: localizations.translate('dog_scan'),
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.book),
-              label: localizations.translate('encyclopedia'),
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: localizations.translate('profile'),
-            ),
-          ],
-          onTap: (index) {
-            if (index == 0) {
-              // 현재 화면이므로 아무 동작 안함
-            } else if (index == 1) {
-              Navigator.pushNamed(context, "/encyclopedia");
-            } else if (index == 2) {
-              Navigator.pushNamed(context, "/profile");
-            }
-          },
         ),
       ),
     );

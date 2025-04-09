@@ -156,6 +156,7 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text(localizations.translate('dog_encyclopedia')),
+        automaticallyImplyLeading: false,
         bottom: TabBar(
           controller: _tabController,
           splashFactory: NoSplash.splashFactory,

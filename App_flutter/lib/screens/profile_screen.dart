@@ -47,7 +47,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     print('빌드 시 사용자 정보: ${authService.userName}, ${authService.userEmail}');
 
     return Scaffold(
-      appBar: AppBar(title: Text(localizations.translate('profile'))),
+      appBar: AppBar(
+        automaticallyImplyLeading: false, // 뒤로가기 버튼 비활성화
+        title: Text(localizations.translate('profile'))
+      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),

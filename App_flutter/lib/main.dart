@@ -1,6 +1,5 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
-// import 'package:firebase_core/firebase_core.dart'; // 주석 처리
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart'; // 카카오 SDK import 추가
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
@@ -15,6 +14,7 @@ import 'screens/dog_encyclopedia_screen.dart';
 import 'screens/breed_detail_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/language_settings_screen.dart';
+import 'screens/main_screen.dart'; // 새로운 메인 화면 추가
 
 // 서비스 import
 import 'services/auth_service.dart';
@@ -96,6 +96,7 @@ class MyApp extends StatelessWidget {
             '/login': (context) => LoginScreen(),
             '/signup': (context) => SignupScreen(),
             '/home': (context) => HomeScreen(),
+            '/main': (context) => MainScreen(), // 메인 탭 화면 추가
             '/result': (context) => ScanResultScreen(),
             '/encyclopedia': (context) => DogEncyclopediaScreen(),
             '/breed_detail': (context) => BreedDetailScreen(),
