@@ -126,13 +126,14 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
           ),
         ),
         shape: MarkerShape.circle,
-        backgroundColor: Colors.brown,
+        backgroundColor: Colors.white,
         title: '🐾',
-        textStyle: TextStyle(fontSize: 20),
+        textStyle: TextStyle(fontSize: 15, color: Colors.brown)
       );
       _markers.add(pawMarker);
     }
   }
+
 
   void _filterBreeds(String query) {
     setState(() {
