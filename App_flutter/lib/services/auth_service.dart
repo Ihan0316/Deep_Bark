@@ -4,16 +4,24 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as KakaoSDK;
+import '../models/user.dart' as MyAppUser;
+import 'api_service.dart';
+import 'dart:io';
 
 class AuthService extends ChangeNotifier {
   bool _isLoggedIn = false;
-  String _userId = '';
+  String _userId = '0';  // String 타입으로 통일
   String _userEmail = 'user@example.com';
   String _userName = '사용자';
   bool _notificationsEnabled = true;
   String _profileImageUrl = '';
   String _loginProvider = ''; // 로그인 제공자 추적 (google, kakao, email)
+  MyAppUser.User? _currentUser;
+
+  final ApiService _apiService = ApiService();
+  static const String _tokenKey = 'auth_token';
+  static const String _userKey = 'user_data';
 
   // Google Sign In 인스턴스
   final GoogleSignIn _googleSignIn = GoogleSignIn(
@@ -31,6 +39,15 @@ class AuthService extends ChangeNotifier {
   bool get notificationsEnabled => _notificationsEnabled;
   String get profileImageUrl => _profileImageUrl;
   String get loginProvider => _loginProvider;
+
+  // 헬퍼 메서드 수정
+  bool _isGoogleUser() {
+    return _loginProvider == 'google';
+  }
+
+  bool _isKakaoUser() {
+    return _loginProvider == 'kakao';
+  }
 
   // 로컬 스토리지에 사용자 정보 저장
   Future<void> _saveUserToLocal() async {
@@ -54,7 +71,7 @@ class AuthService extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       _isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-      _userId = prefs.getString('userId') ?? '';
+      _userId = prefs.getString('userId') ?? '0';
       _userEmail = prefs.getString('userEmail') ?? 'user@example.com';
       _userName = prefs.getString('userName') ?? '사용자';
       _profileImageUrl = prefs.getString('profileImageUrl') ?? '';
@@ -69,42 +86,76 @@ class AuthService extends ChangeNotifier {
 
   // Methods
   Future<bool> login(String email, String password) async {
-    // 로그인 로직 구현
-    _isLoggedIn = true;
-    _userId = 'email_user_${DateTime.now().millisecondsSinceEpoch}';
-    _userEmail = email;
-    _loginProvider = 'email';
-
-    await _saveUserToLocal();
-    notifyListeners();
-    return true;
+    try {
+      // API를 통해 로그인 검증
+      final loginResult = await _apiService.loginUser(email, password);
+      
+      if (loginResult != null && loginResult['token'] != null) {
+        // 로그인 성공 시 사용자 정보 저장
+        _isLoggedIn = true;
+        _currentUser = MyAppUser.User.fromJson(loginResult['user']);
+        _userId = _currentUser!.id.toString();  // int를 String으로 변환
+        _userEmail = email;
+        _userName = _currentUser!.username;
+        _loginProvider = 'email';
+        
+        // 토큰 저장
+        await _saveToken(loginResult['token']);
+        // 사용자 정보 저장
+        await _saveUserData(_currentUser!.toJson());
+        await _saveUserToLocal();
+        
+        notifyListeners();
+        return true;
+      }
+      print('로그인 실패: 유효하지 않은 응답');
+      return false;
+    } catch (e) {
+      print('로그인 API 오류: $e');
+      _isLoggedIn = false;
+      _userId = '0';
+      _userEmail = '';
+      _userName = '';
+      _loginProvider = '';
+      notifyListeners();
+      return false;
+    }
   }
 
-  Future<bool> signup(String email, String password, String name) async {
-    // 회원가입 로직 구현
-    _isLoggedIn = true;
-    _userId = 'email_user_${DateTime.now().millisecondsSinceEpoch}';
-    _userEmail = email;
-    _userName = name;
-    _loginProvider = 'email';
-
-    await _saveUserToLocal();
-    notifyListeners();
-    return true;
+  Future<bool> signup(String email, String password, String username) async {
+    try {
+      // API를 통해 회원가입 요청
+      final result = await _apiService.registerUser(email, password, username, username);  // username을 name으로도 사용
+      
+      if (result['success'] == true) {
+        // 회원가입 성공 시 자동 로그인하지 않고 true 반환
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('회원가입 오류: $e');
+      return false;
+    }
   }
 
-  Future<void> logout() async {
+  Future<bool> logout() async {
     try {
       // 소셜 로그인 상태 확인 및 로그아웃
-      if (_loginProvider == 'google') {
+      if (isGoogleLogin()) {
         if (await _googleSignIn.isSignedIn()) {
           await _googleSignIn.signOut();
+        }
+      } else if (isKakaoLogin()) {
+        try {
+          await KakaoSDK.UserApi.instance.logout();
+        } catch (e) {
+          print('카카오 로그아웃 오류: $e');
         }
       }
 
       // 사용자 정보 초기화
       _isLoggedIn = false;
-      _userId = '';
+      _userId = '0';
       _userEmail = 'user@example.com';
       _userName = '사용자';
       _profileImageUrl = '';
@@ -116,26 +167,77 @@ class AuthService extends ChangeNotifier {
 
       notifyListeners();
       print('로그아웃 완료');
+      return true;
     } catch (e) {
       print('로그아웃 오류: $e');
+      return false;
     }
   }
 
   Future<bool> signInWithEmailAndPassword(String email, String password) async {
-    return await login(email, password);
+    try {
+      final result = await _apiService.loginUser(email, password);
+      
+      if (result?['success'] == true) {
+        _isLoggedIn = true;
+        _currentUser = MyAppUser.User.fromJson(result!['user']);
+        _userId = _currentUser!.id.toString();  // int를 String으로 변환
+        _userEmail = _currentUser!.email;
+        _userName = _currentUser!.username;
+        _loginProvider = 'email';
+        
+        await _saveToken(result['token']);
+        await _saveUserData(_currentUser!.toJson());
+        await _saveUserToLocal();
+        
+        notifyListeners();
+        return true;
+      } else {
+        throw Exception(result?['message'] ?? '로그인에 실패했습니다.');
+      }
+    } catch (e) {
+      print('로그인 오류: $e');
+      rethrow;
+    }
   }
 
-  Future<bool> signUpWithEmailAndPassword(String email, String password, String name) async {
-    return await signup(email, password, name);
+  Future<bool> signUpWithEmailAndPassword(String email, String password, String username, String name) async {
+    try {
+      print('회원가입 요청 데이터: {"email": "$email", "password": "$password", "username": "$username", "name": "$name"}');
+      final result = await _apiService.registerUser(email, password, username, name);
+      
+      print('회원가입 응답: $result');
+      
+      if (result['success'] == true) {
+        _isLoggedIn = true;
+        _userId = result['user']['id'].toString();  // int를 String으로 변환
+        _userEmail = email;
+        _userName = username;
+        await _saveUserData({
+          'id': _userId,
+          'email': email,
+          'username': username,
+          'name': name,
+          'isLoggedIn': true
+        });
+        notifyListeners();
+        return true;
+      } else {
+        final errorMessage = result['message'] ?? '회원가입에 실패했습니다.';
+        print('회원가입 실패: $errorMessage');
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      print('회원가입 오류: $e');
+      rethrow;
+    }
   }
 
   Future<bool> signInWithGoogle() async {
     try {
       print('구글 로그인 시작');
-      // 구글 로그인 시작
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
-      // 사용자가 로그인을 취소한 경우
       if (googleUser == null) {
         print('사용자가 구글 로그인을 취소함');
         return false;
@@ -143,12 +245,17 @@ class AuthService extends ChangeNotifier {
 
       print('구글 사용자 정보: ${googleUser.displayName}, ${googleUser.email}');
 
-      // 인증 정보 가져오기
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
-      // 사용자 정보 저장
       _isLoggedIn = true;
-      _userId = 'google_${googleUser.id}';  // 구글 사용자임을 명확히 표시
+      _currentUser = MyAppUser.User(
+        id: googleUser.id,
+        email: googleUser.email,
+        username: googleUser.displayName ?? 'Google 사용자',
+        profileImageUrl: googleUser.photoUrl ?? '',
+        loginProvider: 'google'
+      );
+      _userId = _currentUser!.id.toString();
       _userEmail = googleUser.email;
       _userName = googleUser.displayName ?? 'Google 사용자';
       _profileImageUrl = googleUser.photoUrl ?? '';
@@ -156,10 +263,7 @@ class AuthService extends ChangeNotifier {
 
       print('저장된 사용자 정보: $_userName, $_userEmail, $_userId, $_loginProvider');
 
-      // 로컬에 사용자 정보 저장
       await _saveUserToLocal();
-
-      // 추가 사용자 정보를 가져오기 위한 API 호출 (선택 사항)
       await _fetchAdditionalUserInfo(googleAuth.accessToken);
 
       notifyListeners();
@@ -172,30 +276,31 @@ class AuthService extends ChangeNotifier {
 
   Future<bool> signInWithKakao() async {
     try {
-      // 변수명을 다르게 지정하여 메서드와 구분
-      bool isInstalled = await isKakaoTalkInstalled();
+      bool isInstalled = await KakaoSDK.isKakaoTalkInstalled();
 
-      OAuthToken token;
+      KakaoSDK.OAuthToken token;
       if (isInstalled) {
-        // 카카오톡으로 로그인
-        token = await UserApi.instance.loginWithKakaoTalk();
+        token = await KakaoSDK.UserApi.instance.loginWithKakaoTalk();
       } else {
-        // 카카오 계정으로 로그인
-        token = await UserApi.instance.loginWithKakaoAccount();
+        token = await KakaoSDK.UserApi.instance.loginWithKakaoAccount();
       }
 
-      // 사용자 정보 가져오기
-      User user = await UserApi.instance.me();
+      KakaoSDK.User user = await KakaoSDK.UserApi.instance.me();
 
-      // 사용자 정보 저장
       _isLoggedIn = true;
-      _userId = 'kakao_${user.id}';  // 카카오 사용자임을 명확히 표시
+      _currentUser = MyAppUser.User(
+        id: user.id.toString(),
+        email: user.kakaoAccount?.email ?? 'kakao_user@example.com',
+        username: user.kakaoAccount?.profile?.nickname ?? '카카오 사용자',
+        profileImageUrl: user.kakaoAccount?.profile?.profileImageUrl ?? '',
+        loginProvider: 'kakao'
+      );
+      _userId = _currentUser!.id.toString();
       _userEmail = user.kakaoAccount?.email ?? 'kakao_user@example.com';
       _userName = user.kakaoAccount?.profile?.nickname ?? '카카오 사용자';
       _profileImageUrl = user.kakaoAccount?.profile?.profileImageUrl ?? '';
       _loginProvider = 'kakao';
 
-      // 로컬에 사용자 정보 저장
       await _saveUserToLocal();
 
       notifyListeners();
@@ -209,14 +314,21 @@ class AuthService extends ChangeNotifier {
   Future<bool> signInWithKakaoAccount() async {
     try {
       // 카카오계정으로 로그인
-      OAuthToken token = await UserApi.instance.loginWithKakaoAccount();
+      KakaoSDK.OAuthToken token = await KakaoSDK.UserApi.instance.loginWithKakaoAccount();
 
       // 사용자 정보 가져오기
-      User user = await UserApi.instance.me();
+      KakaoSDK.User user = await KakaoSDK.UserApi.instance.me();
 
       // 사용자 정보 저장
       _isLoggedIn = true;
-      _userId = 'kakao_${user.id}';
+      _currentUser = MyAppUser.User(
+        id: 'kakao_${user.id}',
+        email: user.kakaoAccount?.email ?? 'kakao_user@example.com',
+        username: user.kakaoAccount?.profile?.nickname ?? '카카오 사용자',
+        profileImageUrl: user.kakaoAccount?.profile?.profileImageUrl ?? '',
+        loginProvider: 'kakao'
+      );
+      _userId = _currentUser!.id;
       _userEmail = user.kakaoAccount?.email ?? 'kakao_user@example.com';
       _userName = user.kakaoAccount?.profile?.nickname ?? '카카오 사용자';
       _profileImageUrl = user.kakaoAccount?.profile?.profileImageUrl ?? '';
@@ -267,10 +379,33 @@ class AuthService extends ChangeNotifier {
   }
 
   // 추가 메서드
-  void updateUserName(String newName) {
-    _userName = newName;
-    _saveUserToLocal();
-    notifyListeners();
+  Future<bool> updateUserName(String newName) async {
+    try {
+      if (_userId == '0') {
+        print('사용자 ID가 없습니다.');
+        return false;
+      }
+
+      final response = await http.put(
+        Uri.parse('${ApiService.baseUrl}/api/users/$_userId/name'),
+        headers: {
+          'Authorization': 'Bearer ${await _getToken()}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'name': newName}),
+      );
+
+      if (response.statusCode == 200) {
+        _userName = newName;
+        await _saveUserToLocal();
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('이름 변경 실패: $e');
+      return false;
+    }
   }
 
   void setNotificationsEnabled(bool value) {
@@ -278,17 +413,22 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> deleteAccount() async {
-    // 계정 삭제 로직 구현
+  Future<bool> deleteAccount() async {
     try {
-      if (_loginProvider == 'google') {
+      if (isGoogleLogin()) {
         if (await _googleSignIn.isSignedIn()) {
-          await _googleSignIn.disconnect(); // 구글 계정 연결 해제
+          await _googleSignIn.disconnect();
+        }
+      } else if (isKakaoLogin()) {
+        try {
+          await KakaoSDK.UserApi.instance.unlink();
+        } catch (e) {
+          print('카카오 계정 연결 해제 오류: $e');
         }
       }
 
       _isLoggedIn = false;
-      _userId = '';
+      _userId = '0';
       _userEmail = '';
       _userName = '';
       _profileImageUrl = '';
@@ -300,28 +440,34 @@ class AuthService extends ChangeNotifier {
 
       notifyListeners();
       print('계정 삭제 완료');
+      return true;
     } catch (e) {
       print('계정 삭제 오류: $e');
+      return false;
     }
   }
 
   // 현재 로그인 상태 확인
   Future<void> checkCurrentUser() async {
     try {
-      // 먼저 로컬 스토리지에서 사용자 정보 로드
       await _loadUserFromLocal();
 
-      // 이미 로그인된 상태라면 소셜 로그인 확인
       if (_isLoggedIn) {
         print('로컬에 저장된 로그인 정보 발견: $_userName, $_userEmail, $_loginProvider');
 
-        // 구글 로그인 상태 확인
-        if (_loginProvider == 'google') {
+        if (_isGoogleUser()) {
           final isSignedIn = await _googleSignIn.isSignedIn();
           if (isSignedIn) {
             final GoogleSignInAccount? account = await _googleSignIn.signInSilently();
             if (account != null) {
-              _userId = 'google_${account.id}';
+              _currentUser = MyAppUser.User(
+                id: account.id,
+                email: account.email,
+                username: account.displayName ?? 'Google 사용자',
+                profileImageUrl: account.photoUrl ?? '',
+                loginProvider: 'google'
+              );
+              _userId = _currentUser!.id.toString();
               _userEmail = account.email;
               _userName = account.displayName ?? 'Google 사용자';
               _profileImageUrl = account.photoUrl ?? '';
@@ -331,8 +477,31 @@ class AuthService extends ChangeNotifier {
               notifyListeners();
             }
           } else {
-            // 구글 로그인 상태가 아니면 로컬 정보 초기화
             print('구글 로그인 상태가 아님, 로컬 정보 초기화');
+            await logout();
+          }
+        } else if (_isKakaoUser()) {
+          try {
+            final user = await KakaoSDK.UserApi.instance.me();
+            if (user != null) {
+              _currentUser = MyAppUser.User(
+                id: user.id.toString(),
+                email: user.kakaoAccount?.email ?? 'kakao_user@example.com',
+                username: user.kakaoAccount?.profile?.nickname ?? '카카오 사용자',
+                profileImageUrl: user.kakaoAccount?.profile?.profileImageUrl ?? '',
+                loginProvider: 'kakao'
+              );
+              _userId = _currentUser!.id.toString();
+              _userEmail = user.kakaoAccount?.email ?? 'kakao_user@example.com';
+              _userName = user.kakaoAccount?.profile?.nickname ?? '카카오 사용자';
+              _profileImageUrl = user.kakaoAccount?.profile?.profileImageUrl ?? '';
+
+              print('카카오 자동 로그인 성공: $_userName, $_userEmail');
+              await _saveUserToLocal();
+              notifyListeners();
+            }
+          } catch (e) {
+            print('카카오 로그인 상태가 아님, 로컬 정보 초기화');
             await logout();
           }
         }
@@ -343,4 +512,53 @@ class AuthService extends ChangeNotifier {
       print('자동 로그인 확인 오류: $e');
     }
   }
+
+  Future<void> _saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_tokenKey, token);
+  }
+
+  Future<void> _saveUserData(Map<String, dynamic> userData) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_userKey, json.encode(userData));
+  }
+
+  // 프로필 이미지 업로드 메서드 추가
+  Future<bool> uploadProfileImage(File imageFile) async {
+    try {
+      if (_userId == '0') {
+        print('사용자 ID가 없습니다.');
+        return false;
+      }
+
+      var uri = Uri.parse('${ApiService.baseUrl}/api/users/$_userId/profile-image');
+      var request = http.MultipartRequest('POST', uri)
+        ..headers['Authorization'] = 'Bearer ${await _getToken()}'
+        ..files.add(await http.MultipartFile.fromPath('image', imageFile.path));
+
+      var response = await request.send();
+      
+      if (response.statusCode == 200) {
+        _profileImageUrl = await response.stream.bytesToString();
+        await _saveUserToLocal();
+        notifyListeners();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('프로필 이미지 업로드 실패: $e');
+      return false;
+    }
+  }
+
+  // 토큰 가져오기 메서드 추가
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_tokenKey);
+  }
+
+  // 로그인 타입 체크 메서드 개선
+  bool isGoogleLogin() => _loginProvider == 'google';
+  bool isKakaoLogin() => _loginProvider == 'kakao';
+  bool isEmailLogin() => _loginProvider == 'email';
 }
