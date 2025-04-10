@@ -35,3 +35,9 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# 모든 하위 프로젝트의 특정 폴더 무시
+**/.idea/
+**/.dart_tool/
+**/build/
+
