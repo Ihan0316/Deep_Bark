@@ -1,11 +1,11 @@
 import torch
 import torch.nn as nn
-import torchvision.models as models
+import timm
 
 
-def load_model(model_path="model/Chihuahua_Dachshund.pth", num_classes=2):
+def load_model(model_path="model/allbreeds_multi_label_model.pth", num_classes=30):
     """
-    ResNet50 모델을 로드하고 저장된 가중치를 적용합니다.
+    EfficientNet-B3 모델을 로드하고 저장된 가중치를 적용합니다.
 
     Args:
         model_path (str): 모델 가중치 파일 경로
@@ -14,13 +14,13 @@ def load_model(model_path="model/Chihuahua_Dachshund.pth", num_classes=2):
     Returns:
         torch.nn.Module: 학습된 모델
     """
-    # ResNet50 모델 생성
-    model = models.resnet50(weights=None)
+    # EfficientNet-B3 모델 생성
+    model = timm.create_model('efficientnet_b3', pretrained=False)
 
-    # 저장된 모델과 동일한 시퀀셜 구조의 fc 레이어 생성
-    num_ftrs = model.fc.in_features
-    model.fc = nn.Sequential(
-        nn.Linear(num_ftrs, 512),
+    # 저장된 모델과 동일한 시퀀셜 구조의 classifier 레이어 생성
+    in_features = model.classifier.in_features
+    model.classifier = nn.Sequential(
+        nn.Linear(in_features, 512),
         nn.ReLU(),
         nn.Dropout(0.5),
         nn.Linear(512, num_classes)
@@ -33,9 +33,9 @@ def load_model(model_path="model/Chihuahua_Dachshund.pth", num_classes=2):
         # 'model.' 접두사 처리
         if any(k.startswith('model.') for k in state_dict.keys()):
             new_state_dict = {k.replace('model.', ''): v for k, v in state_dict.items()}
-            model.load_state_dict(new_state_dict)
+            model.load_state_dict(new_state_dict, strict=False)
         else:
-            model.load_state_dict(state_dict)
+            model.load_state_dict(state_dict, strict=False)
 
         print(f"모델이 성공적으로 로드되었습니다: {model_path}")
     except Exception as e:
