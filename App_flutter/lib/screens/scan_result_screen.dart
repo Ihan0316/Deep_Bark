@@ -99,10 +99,7 @@ class ScanResultScreen extends StatelessWidget {
                   ),
                 )
               else
-                ...List.generate(
-                  results.length,
-                  (index) => _buildResultItem(context, results[index], index),
-                ),
+                ..._getFilteredResults(results).map((breed) => _buildResultItem(context, breed, results.indexOf(breed))),
 
               SizedBox(height: 24),
             ],
@@ -112,9 +109,23 @@ class ScanResultScreen extends StatelessWidget {
     );
   }
 
+  List<DogBreed> _getFilteredResults(List<DogBreed> results) {
+    // 정상 결과만 필터링
+    final validResults = results.where((breed) => (breed.confidence ?? 0) >= 30).toList();
+    
+    if (validResults.isEmpty) {
+      // 모든 결과가 분석 오류인 경우 첫 번째 결과만 반환
+      return [results.first];
+    } else {
+      // 정상 결과가 있는 경우 상위 2개 결과만 반환
+      validResults.sort((a, b) => (b.confidence ?? 0).compareTo(a.confidence ?? 0));
+      return validResults.take(2).toList();
+    }
+  }
+
   Widget _buildResultItem(BuildContext context, DogBreed breed, int index) {
     final localizations = AppLocalizations.of(context);
-    final bool isError = breed.name == '분석 오류' || (breed.confidence ?? 0) < 30;
+    final bool isError = (breed.confidence ?? 0) < 30;
 
     return GestureDetector(
       onTap: isError ? null : () {
@@ -139,11 +150,13 @@ class ScanResultScreen extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundImage: breed.imageUrl != null
-                        ? (breed.imageUrl!.startsWith('assets/')
-                            ? AssetImage(breed.imageUrl!)
-                            : CachedNetworkImageProvider(breed.imageUrl!))
-                        : AssetImage('assets/images/dog_placeholder.png') as ImageProvider,
+                    backgroundImage: isError 
+                      ? AssetImage('assets/images/error.png')
+                      : (breed.imageUrl != null
+                          ? (breed.imageUrl!.startsWith('assets/')
+                              ? AssetImage(breed.imageUrl!)
+                              : CachedNetworkImageProvider(breed.imageUrl!))
+                          : AssetImage('assets/images/dog_placeholder.png') as ImageProvider),
                   ),
                   SizedBox(width: 16),
                   Expanded(
@@ -151,7 +164,7 @@ class ScanResultScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isError ? breed.name : '${index + 1}. ${breed.name}',
+                          isError ? '분석 오류 - 다른 이미지로 시도해주세요!' : '${index + 1}. ${breed.name}',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
