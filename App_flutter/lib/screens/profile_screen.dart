@@ -82,14 +82,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           : null,
                 ),
               ),
-              SizedBox(height: 10),
-              Text(
-                localizations.translate('change_profile_image'),
-                style: TextStyle(
-                  color: Colors.blue,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
               SizedBox(height: 30),
 
               // 로그인 정보 표시 (소셜 로그인 포함)
