@@ -133,10 +133,10 @@ class DogBreedService {
       return [
         DogBreed(
           id: '1',
-          name: '분석 오류',
+          name: '분석 오류 - 다른 이미지로 시도해주세요!',
           origin: '알 수 없음',
           description: '이미지 분석 중 오류가 발생했습니다: $e',
-          imageUrl: 'https://example.com/error.jpg',
+          imageUrl: 'assets/images/error.png',
         ),
       ];
     }

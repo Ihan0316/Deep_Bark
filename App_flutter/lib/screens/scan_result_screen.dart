@@ -60,10 +60,49 @@ class ScanResultScreen extends StatelessWidget {
 
               SizedBox(height: 16),
 
-              ...List.generate(
-                results.length,
-                    (index) => _buildResultItem(context, results[index], index),
-              ),
+              if (results.isEmpty)
+                Card(
+                  margin: EdgeInsets.only(bottom: 12),
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 30,
+                              backgroundImage: AssetImage('assets/images/error.png'),
+                            ),
+                            SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('분석 오류 - 다른 이미지로 시도해주세요!',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                ...List.generate(
+                  results.length,
+                  (index) => _buildResultItem(context, results[index], index),
+                ),
 
               SizedBox(height: 24),
             ],
@@ -75,8 +114,10 @@ class ScanResultScreen extends StatelessWidget {
 
   Widget _buildResultItem(BuildContext context, DogBreed breed, int index) {
     final localizations = AppLocalizations.of(context);
+    final bool isError = breed.name == '분석 오류' || (breed.confidence ?? 0) < 30;
+
     return GestureDetector(
-      onTap: () {
+      onTap: isError ? null : () {
         Navigator.pushNamed(
           context,
           '/breed_detail',
@@ -99,7 +140,9 @@ class ScanResultScreen extends StatelessWidget {
                   CircleAvatar(
                     radius: 30,
                     backgroundImage: breed.imageUrl != null
-                        ? CachedNetworkImageProvider(breed.imageUrl!)
+                        ? (breed.imageUrl!.startsWith('assets/')
+                            ? AssetImage(breed.imageUrl!)
+                            : CachedNetworkImageProvider(breed.imageUrl!))
                         : AssetImage('assets/images/dog_placeholder.png') as ImageProvider,
                   ),
                   SizedBox(width: 16),
@@ -108,10 +151,11 @@ class ScanResultScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${index + 1}. ${breed.name}',
+                          isError ? breed.name : '${index + 1}. ${breed.name}',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
+                            color: isError ? Colors.black : null,
                           ),
                         )
                       ],
@@ -121,7 +165,7 @@ class ScanResultScreen extends StatelessWidget {
               ),
               SizedBox(height: 12),
               // 신뢰도 표시 바
-              Column(
+              if (!isError) Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(

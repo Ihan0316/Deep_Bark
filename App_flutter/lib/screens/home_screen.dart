@@ -57,6 +57,9 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       );
     } catch (e) {
+      setState(() {
+        _image = File('assets/images/error.png');
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).translate('image_analysis_error') + ': ${e.toString()}')),
       );
