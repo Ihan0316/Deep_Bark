@@ -52,6 +52,7 @@ class _SplashScreenState extends State<SplashScreen> {
               'assets/images/logo.png',
               width: 150,
               height: 150,
+              color: Colors.white,
             ),
             SizedBox(height: 30),
             CircularProgressIndicator(

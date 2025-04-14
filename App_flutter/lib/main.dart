@@ -77,6 +77,18 @@ class MyApp extends StatelessWidget {
                 ),
               ),
             ),
+            pageTransitionsTheme: PageTransitionsTheme(
+              builders: {
+                TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+                TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+              },
+            ),
+            scrollbarTheme: ScrollbarThemeData(
+              thumbVisibility: MaterialStateProperty.all(true),
+              thickness: MaterialStateProperty.all(6.0),
+              radius: Radius.circular(3.0),
+              thumbColor: MaterialStateProperty.all(Colors.brown.withOpacity(0.5)),
+            ),
           ),
           locale: localeProvider.locale,  // 현재 로케일 설정
           supportedLocales: [

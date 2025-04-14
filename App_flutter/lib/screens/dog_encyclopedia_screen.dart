@@ -27,6 +27,7 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
 
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
+  bool _isMapReady = false;
 
   @override
   void initState() {
@@ -133,7 +134,6 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
       _markers.add(pawMarker);
     }
   }
-
 
   void _filterBreeds(String query) {
     setState(() {
@@ -246,10 +246,39 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
                   markers: _markers,
                   onMapCreated: (controller) {
                     _mapController = controller;
+                    // 지도 스타일 최적화
+                    controller.setMapStyle('''[
+                      {
+                        "featureType": "all",
+                        "elementType": "geometry",
+                        "stylers": [
+                          {
+                            "color": "#f5f5f5"
+                          }
+                        ]
+                      },
+                      {
+                        "featureType": "water",
+                        "elementType": "geometry",
+                        "stylers": [
+                          {
+                            "color": "#c9c9c9"
+                          }
+                        ]
+                      }
+                    ]''');
                   },
                   gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                    Factory<EagerGestureRecognizer>(() => EagerGestureRecognizer()),
+                    Factory<OneSequenceGestureRecognizer>(
+                      () => EagerGestureRecognizer(),
+                    ),
                   },
+                  // 지도 성능 최적화 설정
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: true,
+                  zoomControlsEnabled: true,
+                  mapToolbarEnabled: false,
+                  minMaxZoomPreference: MinMaxZoomPreference(1, 18),
                 ),
               ],
             ),
