@@ -42,12 +42,25 @@ def classify_image():
     if image_file.filename == "":
         return jsonify({"error": "No selected file"}), 400
 
+    # 파일 확장자 검사
+    allowed_extensions = {'jpg', 'jpeg', 'png', 'heif'}
+    file_ext = image_file.filename.rsplit('.', 1)[1].lower() if '.' in image_file.filename else ''
+    if file_ext not in allowed_extensions:
+        return jsonify({"error": f"Invalid file type. Allowed types: {', '.join(allowed_extensions)}"}), 400
+
     # 이미지 저장
     image_path = os.path.join(app.config["UPLOAD_FOLDER"], image_file.filename)
     image_file.save(image_path)
 
     # 이미지 처리 및 예측
     try:
+        # 이미지 차원 검사 및 변환
+        image = Image.open(image_path)
+        if image.mode != 'RGB':
+            # RGBA, L(그레이스케일) 등의 이미지를 RGB로 변환
+            image = image.convert('RGB')
+            image.save(image_path)  # 변환된 이미지 저장
+
         # 새로운 predict_image 함수 사용
         predicted_labels, class_probs = predict_image(image_path, model, device, class_names)
 
