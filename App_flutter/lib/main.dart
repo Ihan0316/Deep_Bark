@@ -1,8 +1,9 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
-import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart'; // 카카오 SDK import 추가
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // 화면 import
 import 'screens/splash_screen.dart';
@@ -24,8 +25,11 @@ import 'services/app_localizations.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 카카오 SDK 초기화 (네이티브 앱 키로 교체 필요)
-  KakaoSdk.init(nativeAppKey: 'f72cc05a22c1e94081315d79eb930c42');
+  // .env 파일 로드
+  await dotenv.load(fileName: "assets/.env");
+
+  // 카카오 SDK 초기화
+  KakaoSdk.init(nativeAppKey: dotenv.env['KAKAO_NATIVE_APP_KEY']!);
 
   // AuthService 초기화 및 현재 사용자 확인
   final authService = AuthService();
