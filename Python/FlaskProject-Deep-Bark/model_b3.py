@@ -3,7 +3,7 @@ import torch.nn as nn
 import timm
 
 
-def load_model(model_path="model/allbreeds_multi_label_model.pth", num_classes=30):
+def load_model(model_path="model/allbreeds_multi_label_model_b3.pth", num_classes=30):
     """
     EfficientNet-B3 모델을 로드하고 저장된 가중치를 적용합니다.
 

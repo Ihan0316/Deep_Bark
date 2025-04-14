@@ -3,7 +3,7 @@ import torch
 import torchvision.transforms as transforms
 from flask import Flask, request, jsonify, render_template
 from PIL import Image
-from model_b3 import load_model
+from model import load_model
 
 # Flask 앱 생성
 app = Flask(__name__)

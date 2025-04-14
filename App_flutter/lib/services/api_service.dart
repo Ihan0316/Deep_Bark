@@ -5,7 +5,7 @@ class ApiService {
   // Android 에뮬레이터에서 로컬호스트 접근용
   static const String baseUrl = 'http://10.0.2.2:8080';
   // 실제 기기나 iOS 시뮬레이터에서는 아래 주소 사용
-  // static const String baseUrl = 'http://192.168.0.100:8080';
+  // static const String baseUrl = 'http://10.100.201.41:8080';
 
   Future<Map<String, dynamic>> registerUser(String email, String password, String username, String name) async {
     try {

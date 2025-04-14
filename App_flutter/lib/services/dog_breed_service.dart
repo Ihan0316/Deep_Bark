@@ -23,7 +23,7 @@ class DogBreedService {
 
   // Flask 서버 URL (실제 서버 주소로 변경 필요)
   // 실제 기기나 iOS 시뮬레이터에서는 실제 IP 주소 사용 필요
-  // 예: final String baseUrl = 'http://192.168.0.100:5000';
+  // final String baseUrl = 'http://10.100.201.41:5000';
 
   // 영어 견종 이름을 한글로 변환하는 메서드
   String _convertBreedNameToKorean(String englishName) {
@@ -31,9 +31,9 @@ class DogBreedService {
     final Map<String, String> breedNameMap = {
       'Golden Retriever': '골든 리트리버',
       'Welsh Corgi': '웰시 코기',
-      'Korean Jindo': '진돗개',
+      'Jindo Dog': '진돗개',
       'Shiba Inu': '시바견',
-      'Chihuahua': '치와와',
+      'Chihuahua': '치와와 (개)',
       'Dachshund': '닥스훈트',
       'Labrador Retriever': '래브라도 리트리버',
       'German Shepherd': '저먼 셰퍼드',
@@ -43,7 +43,7 @@ class DogBreedService {
       'Pomeranian': '포메라니안',
       'Husky': '허스키',
       'Maltese': '말티즈',
-      'Shih Tzu': '시츄',
+      'Shih Tzu': '시추',
       'Yorkshire Terrier': '요크셔 테리어',
       'Bichon Frise': '비숑 프리제',
       'Cocker Spaniel': '코커 스패니얼',
