@@ -77,7 +77,7 @@ def classify_image():
             ],
             "image_path": image_path
         }
-
+        print(response_data)
         return jsonify(response_data)
     except Exception as e:
         print(f"예측 중 오류 발생: {e}")

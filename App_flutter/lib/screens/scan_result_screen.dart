@@ -27,7 +27,7 @@ class ScanResultScreen extends StatelessWidget {
             children: [
               Container(
                 width: double.infinity,
-                height: 250,
+                height: MediaQuery.of(context).size.height * 0.35,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
@@ -48,12 +48,12 @@ class ScanResultScreen extends StatelessWidget {
                 ),
               ),
 
-              SizedBox(height: 24),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.03),
 
               Text(
                 localizations.translate('analysis_result'),
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: MediaQuery.of(context).size.width * 0.06,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -83,10 +83,17 @@ class ScanResultScreen extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('분석 오류 - 다른 이미지로 시도해주세요!',
+                                  Text('다른 이미지로 시도해주세요!',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text('옷을 입지 않은 전신사진을 넣어주세요!!',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey[600],
                                     ),
                                   )
                                 ],
@@ -164,7 +171,7 @@ class ScanResultScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isError ? '분석 오류 - 다른 이미지로 시도해주세요!' : '${index + 1}. ${breed.name}',
+                          isError ? '다른 이미지로 시도해주세요!' : '${index + 1}. ${breed.name}',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,

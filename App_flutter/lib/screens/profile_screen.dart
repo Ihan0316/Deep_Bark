@@ -63,7 +63,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               GestureDetector(
                 onTap: _getImage,
                 child: CircleAvatar(
-                  radius: 60,
+                  radius: MediaQuery.of(context).size.width * 0.15, // 화면 너비의 15%로 조정
                   backgroundColor: Colors.grey[300],
                   backgroundImage:
                       _profileImage != null
@@ -77,13 +77,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               authService.profileImageUrl.isEmpty)
                           ? Icon(
                             Icons.person,
-                            size: 60,
+                            size: MediaQuery.of(context).size.width * 0.15, // 화면 너비의 15%로 조정
                             color: Colors.grey[600],
                           )
                           : null,
                 ),
               ),
-              SizedBox(height: 30),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.03), // 화면 높이의 3%로 조정
 
               // 로그인 정보 표시 (소셜 로그인 포함)
               Card(
@@ -94,17 +94,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // 로그인 타입 표시
-                      if (authService.userId.startsWith('google'))
+                      if (authService.isGoogleLogin())
                         Padding(
                           padding: const EdgeInsets.only(bottom: 16.0),
                           child: Row(
                             children: [
-                              Icon(Icons.account_circle, color: Colors.blue),
+                              Icon(Icons.g_mobiledata, color: Colors.blue, size: 30),
                               SizedBox(width: 8),
                               Text(
-                                localizations.translate(
-                                  'logged_in_with_google',
-                                ),
+                                localizations.translate('logged_in_with_google'),
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.blue,
@@ -113,89 +111,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ],
                           ),
                         ),
-                      if (authService.userId.startsWith('kakao'))
+                      if (authService.isKakaoLogin())
                         Padding(
                           padding: const EdgeInsets.only(bottom: 16.0),
                           child: Row(
                             children: [
-                              Icon(Icons.account_circle, color: Colors.indigo),
+                              Icon(Icons.chat, color: Colors.yellow[900], size: 30),
                               SizedBox(width: 8),
                               Text(
                                 localizations.translate('logged_in_with_kakao'),
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.indigo,
+                                  color: Colors.yellow[900],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (authService.isEmailLogin())
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: Row(
+                            children: [
+                              Icon(Icons.email, color: Colors.grey[800], size: 30),
+                              SizedBox(width: 8),
+                              Text(
+                                localizations.translate('logged_in_with_email'),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey[800],
                                 ),
                               ),
                             ],
                           ),
                         ),
 
-                      // 이메일 정보
-                      ListTile(
-                        leading: Icon(Icons.email),
-                        title: Text(localizations.translate('email')),
-                        subtitle: Text(
-                          authService.userEmail,
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                      // 사용자 정보 표시
+                      Text(
+                        authService.userName,
+                        style: TextStyle(
+                          fontSize: MediaQuery.of(context).size.width * 0.05, // 화면 너비의 5%로 조정
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Divider(),
-
-                      // 이름 정보
-                      ListTile(
-                        leading: Icon(Icons.person),
-                        title: Text(localizations.translate('name')),
-                        subtitle: Text(
-                          authService.userName,
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                      SizedBox(height: MediaQuery.of(context).size.height * 0.01), // 화면 높이의 1%로 조정
+                      Text(
+                        authService.userEmail,
+                        style: TextStyle(
+                          fontSize: MediaQuery.of(context).size.width * 0.04, // 화면 너비의 4%로 조정
+                          color: Colors.grey[600],
                         ),
-                        trailing: Icon(Icons.edit),
-                        onTap: () {
-                          // 이름 수정 다이얼로그 표시
-                          _nameController.text = authService.userName;
-                          showDialog(
-                            context: context,
-                            builder:
-                                (context) => AlertDialog(
-                                  title: Text(
-                                    localizations.translate('change_name'),
-                                  ),
-                                  content: TextField(
-                                    controller: _nameController,
-                                    decoration: InputDecoration(
-                                      hintText: localizations.translate(
-                                        'enter_new_name',
-                                      ),
-                                      border: OutlineInputBorder(),
-                                    ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: Text(
-                                        localizations.translate('cancel'),
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        final newName = _nameController.text;
-                                        if (newName.isNotEmpty) {
-                                          authService.updateUserName(newName);
-                                        }
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text(
-                                        localizations.translate('change'),
-                                      ),
-                                      style: TextButton.styleFrom(
-                                        foregroundColor: Colors.brown,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                          );
-                        },
                       ),
                     ],
                   ),

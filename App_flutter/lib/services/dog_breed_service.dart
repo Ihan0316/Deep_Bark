@@ -133,9 +133,9 @@ class DogBreedService {
       return [
         DogBreed(
           id: '1',
-          name: '분석 오류 - 다른 이미지로 시도해주세요!',
+          name: '다른 이미지로 시도해주세요! $e\n옷을 입지 않은 전신사진을 넣어주세요!!',
           origin: '알 수 없음',
-          description: '이미지 분석 중 오류가 발생했습니다: $e',
+          description: '이미지 분석 중 오류가 발생했습니다:',
           imageUrl: 'assets/images/error.png',
         ),
       ];

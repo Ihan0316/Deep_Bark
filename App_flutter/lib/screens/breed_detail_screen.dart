@@ -100,7 +100,7 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
               if (breed.imageUrl != null)
                 Container(
                   width: double.infinity,
-                  height: 250,
+                  height: MediaQuery.of(context).size.height * 0.35,
                   child: CachedNetworkImage(
                     imageUrl: breed.imageUrl!,
                     fit: BoxFit.cover,
@@ -113,14 +113,14 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
                     errorWidget: (context, url, error) => Container(
                       color: Colors.grey[300],
                       child: Center(
-                        child: Icon(Icons.pets, size: 80, color: Colors.grey[600]),
+                        child: Icon(Icons.pets, size: MediaQuery.of(context).size.width * 0.2, color: Colors.grey[600]),
                       ),
                     ),
                   ),
                 ),
 
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.04),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -137,7 +137,7 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
                             Text(
                               localizations.translate('basic_info'),
                               style: TextStyle(
-                                fontSize: 20,
+                                fontSize: MediaQuery.of(context).size.width * 0.05,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

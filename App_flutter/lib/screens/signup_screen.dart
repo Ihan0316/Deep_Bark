@@ -76,18 +76,21 @@ class _SignupScreenState extends State<SignupScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20.0),
+          padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.04),
           child: Form(
             key: _formKey,
             child: Column(
               children: [
-                const SizedBox(height: 20),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                 TextFormField(
                   controller: _usernameController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: '사용자 이름',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.person_outline),
+                  ),
+                  style: TextStyle(
+                    fontSize: MediaQuery.of(context).size.width * 0.04,
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -96,13 +99,16 @@ class _SignupScreenState extends State<SignupScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 15),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: '이메일',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.email),
+                  ),
+                  style: TextStyle(
+                    fontSize: MediaQuery.of(context).size.width * 0.04,
                   ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
@@ -118,10 +124,13 @@ class _SignupScreenState extends State<SignupScreen> {
                 const SizedBox(height: 15),
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: '비밀번호',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.lock),
+                  ),
+                  style: TextStyle(
+                    fontSize: MediaQuery.of(context).size.width * 0.04,
                   ),
                   obscureText: true,
                   validator: (value) {
@@ -134,13 +143,16 @@ class _SignupScreenState extends State<SignupScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 15),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                 TextFormField(
                   controller: _confirmPasswordController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: '비밀번호 재확인',
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.lock_outline),
+                  ),
+                  style: TextStyle(
+                    fontSize: MediaQuery.of(context).size.width * 0.04,
                   ),
                   obscureText: true,
                   validator: (value) {
@@ -153,24 +165,35 @@ class _SignupScreenState extends State<SignupScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 30),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.03),
                 _isLoading
-                    ? const CircularProgressIndicator()
+                    ? CircularProgressIndicator()
                     : ElevatedButton(
                         onPressed: _signup,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.brown,
-                          minimumSize: const Size(double.infinity, 50),
+                          minimumSize: Size(double.infinity, MediaQuery.of(context).size.height * 0.06),
                         ),
-                        child: const Text('회원가입'),
+                        child: Text(
+                          '회원가입',
+                          style: TextStyle(
+                            fontSize: MediaQuery.of(context).size.width * 0.04,
+                          ),
+                        ),
                       ),
-                const SizedBox(height: 15),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  child: const Text('이미 계정이 있으신가요?'),
+                  child: Text(
+                    '이미 계정이 있으신가요?',
+                    style: TextStyle(
+                      fontSize: MediaQuery.of(context).size.width * 0.035,
+                    ),
+                  ),
                 ),
+                SizedBox(height: MediaQuery.of(context).size.height * 0.05),
               ],
             ),
           ),

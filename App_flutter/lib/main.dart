@@ -15,7 +15,8 @@ import 'screens/dog_encyclopedia_screen.dart';
 import 'screens/breed_detail_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/language_settings_screen.dart';
-import 'screens/main_screen.dart'; // 새로운 메인 화면 추가
+import 'screens/main_screen.dart';
+
 
 // 서비스 import
 import 'services/auth_service.dart';

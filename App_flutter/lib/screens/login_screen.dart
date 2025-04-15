@@ -93,88 +93,100 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            // 로고
-            Image.asset('assets/images/logo.png', width: 150, height: 150),
-            SizedBox(height: 15),
-            // 이메일 입력
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                labelText: localizations.translate('email'),
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.email),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.04),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              // 로고
+              Image.asset(
+                'assets/images/logo.png', 
+                width: MediaQuery.of(context).size.width * 0.4,
+                height: MediaQuery.of(context).size.width * 0.4,
               ),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            SizedBox(height: 15),
-            // 비밀번호 입력
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(
-                labelText: localizations.translate('password'),
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.lock),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+              // 이메일 입력
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  labelText: localizations.translate('email'),
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.email),
+                ),
+                style: TextStyle(
+                  fontSize: MediaQuery.of(context).size.width * 0.04,
+                ),
+                keyboardType: TextInputType.emailAddress,
               ),
-              obscureText: true,
-            ),
-            SizedBox(height: 20),
-            // 로그인 버튼
-            _isLoading
-                ? CircularProgressIndicator()
-                : ElevatedButton(
-                  onPressed: _login,
-                  child: Text(localizations.translate('login')),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.brown,
-                    minimumSize: Size(double.infinity, 50),
-                  ),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+              // 비밀번호 입력
+              TextField(
+                controller: _passwordController,
+                decoration: InputDecoration(
+                  labelText: localizations.translate('password'),
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock),
                 ),
-            SizedBox(height: 15),
-            // 회원가입 링크
-            TextButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/signup');
-              },
-              child: Text(localizations.translate('no_account_signup')),
-            ),
-            SizedBox(height: 10),
-            Text(localizations.translate('or_login_with_social')),
-            SizedBox(height: 30),
-            // 소셜 로그인 버튼들
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // 구글 로그인
-                InkWell(
-                  onTap: _googleLogin,
-                  child: Image.asset(
-                    'assets/images/android_light.png',
-                    width: 300,
-                  ),
+                style: TextStyle(
+                  fontSize: MediaQuery.of(context).size.width * 0.04,
                 ),
-                SizedBox(height: 20),
-                // 카카오 로그인
-                InkWell(
-                  onTap: _kakaoLogin,
-                  child: Provider.of<LocaleProvider>(context).locale.languageCode == 'ko'
-                      ? Image.asset(
-                    'assets/images/kakao_login_medium_ko.png',
-                    width: 300,
-                  )
-                      : Image.asset(
-                    'assets/images/kakao_login_medium_en.png',
-                    width: 300,
+                obscureText: true,
+              ),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+              // 로그인 버튼
+              _isLoading
+                  ? CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _login,
+                      child: Text(localizations.translate('login')),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.brown,
+                        minimumSize: Size(double.infinity, 50),
+                      ),
+                    ),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+              // 회원가입 링크
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/signup');
+                },
+                child: Text(localizations.translate('no_account_signup')),
+              ),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+              Text(localizations.translate('or_login_with_social')),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+              // 소셜 로그인 버튼들
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // 구글 로그인
+                  InkWell(
+                    onTap: _googleLogin,
+                    child: Image.asset(
+                      'assets/images/android_light.png',
+                      width: MediaQuery.of(context).size.width * 0.8, // 화면 너비의 80%로 조정
+                    ),
                   ),
-                ),
-
-              ],
-            ),
-          ],
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                  // 카카오 로그인
+                  InkWell(
+                    onTap: _kakaoLogin,
+                    child: Provider.of<LocaleProvider>(context).locale.languageCode == 'ko'
+                        ? Image.asset(
+                            'assets/images/kakao_login_medium_ko.png',
+                            width: MediaQuery.of(context).size.width * 0.8, // 화면 너비의 80%로 조정
+                          )
+                        : Image.asset(
+                            'assets/images/kakao_login_medium_en.png',
+                            width: MediaQuery.of(context).size.width * 0.8, // 화면 너비의 80%로 조정
+                          ),
+                  ),
+                ],
+              ),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.05), // 하단 여백 추가
+            ],
+          ),
         ),
       ),
     );

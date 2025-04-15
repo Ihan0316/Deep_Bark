@@ -99,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // 이미지 표시 영역
               Container(
                 width: double.infinity,
-                height: 300,
+                height: MediaQuery.of(context).size.height * 0.4, // 화면 높이의 40%로 조정
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(15),
@@ -109,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? Center(
                         child: Icon(
                           Icons.pets,
-                          size: 100,
+                          size: MediaQuery.of(context).size.width * 0.2, // 화면 너비의 20%로 조정
                           color: Colors.grey[400],
                         ),
                       )

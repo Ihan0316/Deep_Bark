@@ -205,13 +205,13 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
                         borderRadius: BorderRadius.circular(8),
                         child: Image.network(
                           breed.imageUrl!,
-                          width: 50,
-                          height: 50,
+                          width: MediaQuery.of(context).size.width * 0.12,
+                          height: MediaQuery.of(context).size.width * 0.12,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
-                              width: 50,
-                              height: 50,
+                              width: MediaQuery.of(context).size.width * 0.12,
+                              height: MediaQuery.of(context).size.width * 0.12,
                               color: Colors.grey[300],
                               child: Icon(Icons.pets, color: Colors.grey[600]),
                             );
@@ -219,13 +219,23 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
                         ),
                       )
                           : Container(
-                        width: 50,
-                        height: 50,
+                        width: MediaQuery.of(context).size.width * 0.12,
+                        height: MediaQuery.of(context).size.width * 0.12,
                         color: Colors.grey[300],
                         child: Icon(Icons.pets, color: Colors.grey[600]),
                       ),
-                      title: Text(breed.name),
-                      subtitle: Text('${localizations.translate('origin')}: ${breed.origin}'),
+                      title: Text(
+                        breed.name,
+                        style: TextStyle(
+                          fontSize: MediaQuery.of(context).size.width * 0.04,
+                        ),
+                      ),
+                      subtitle: Text(
+                        '${localizations.translate('origin')}: ${breed.origin}',
+                        style: TextStyle(
+                          fontSize: MediaQuery.of(context).size.width * 0.035,
+                        ),
+                      ),
                       onTap: () {
                         Navigator.pushNamed(
                           context,
