@@ -57,19 +57,19 @@ class DogBreedService {
     return breedNameMap[englishName] ?? englishName;
   }
 
-  Future<List<DogBreed>> analyzeImage(File image) async {
+  Future<List<DogBreed>> analyzeImage(File imageFile) async {
     try {
       print('=== 이미지 분석 API 요청 ===');
       print('요청 URL: $baseUrl/api/analyze');
       
       var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/analyze'));
-      var stream = http.ByteStream(DelegatingStream.typed(image.openRead()));
-      var length = await image.length();
-      var multipartFile = http.MultipartFile('image', stream, length, filename: basename(image.path));
+      var stream = http.ByteStream(DelegatingStream.typed(imageFile.openRead()));
+      var length = await imageFile.length();
+      var multipartFile = http.MultipartFile('image', stream, length, filename: basename(imageFile.path));
       request.files.add(multipartFile);
 
       print('이미지 파일 정보:');
-      print('- 파일명: ${basename(image.path)}');
+      print('- 파일명: ${basename(imageFile.path)}');
       print('- 파일 크기: $length bytes');
 
       var response = await _httpClient.send(request);
@@ -95,23 +95,7 @@ class DogBreedService {
           print('- 견종(한글): $koreanBreedName');
           print('- 신뢰도: $confidence%');
 
-          // 캐시된 견종 정보 확인
-          if (_breedCache.containsKey(koreanBreedName)) {
-            return _breedCache[koreanBreedName]!.copyWith(confidence: confidence);
-          }
-
-          // 캐시된 내용 확인
-          String? cachedContent = _contentCache[koreanBreedName];
-          String? cachedImageUrl = _imageUrlCache[koreanBreedName];
-
-          // 캐시된 내용이 없는 경우에만 API 호출
-          String description = cachedContent ?? await getWikipediaContent(koreanBreedName);
-          String? imageUrl = cachedImageUrl ?? await getWikipediaImage(koreanBreedName);
-
-          // 캐시 업데이트
-          if (cachedContent == null) _contentCache[koreanBreedName] = description;
-          if (cachedImageUrl == null) _imageUrlCache[koreanBreedName] = imageUrl;
-
+          // 데이터베이스에서 견종 정보 가져오기
           List<DogBreed> allBreeds = await getAllBreeds();
           DogBreed? matchingBreed = allBreeds.firstWhere(
             (breed) => breed.nameEn.toLowerCase() == englishBreedName.toLowerCase(),
@@ -126,16 +110,17 @@ class DogBreedService {
               lifespanEn: '-',
               lifespanKo: '-',
               weight: '-',
-              descriptionEn: '이 견종에 대한 위키백과 정보를 찾을 수 없습니다.',
-              descriptionKo: '이 견종에 대한 위키백과 정보를 찾을 수 없습니다.',
-              imageUrl: 'assets/images/error.png',
+              descriptionEn: '이 견종에 대한 정보를 찾을 수 없습니다.',
+              descriptionKo: '이 견종에 대한 정보를 찾을 수 없습니다.',
+              imageUrl: 'assets/images/dog/${koreanBreedName}.jpg',
             ),
           );
 
+          // 데이터베이스에서 가져온 정보를 우선적으로 사용
           final breed = DogBreed(
-            id: predictions.indexOf(prediction),
-            nameEn: englishBreedName,
-            nameKo: koreanBreedName,
+            id: matchingBreed.id,
+            nameEn: matchingBreed.nameEn,
+            nameKo: matchingBreed.nameKo,
             originEn: matchingBreed.originEn,
             originKo: matchingBreed.originKo,
             sizeEn: matchingBreed.sizeEn,
@@ -143,14 +128,12 @@ class DogBreedService {
             lifespanEn: matchingBreed.lifespanEn,
             lifespanKo: matchingBreed.lifespanKo,
             weight: matchingBreed.weight,
-            descriptionEn: description,
-            descriptionKo: description,
-            imageUrl: imageUrl ?? matchingBreed.imageUrl,
+            descriptionEn: matchingBreed.descriptionEn,
+            descriptionKo: matchingBreed.descriptionKo,
+            imageUrl: 'assets/images/dog/${matchingBreed.nameKo}.jpg',
             confidence: confidence,
           );
 
-          // 견종 정보 캐시
-          _addToBreedCache(koreanBreedName, breed);
           return breed;
         }).toList();
 

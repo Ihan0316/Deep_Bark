@@ -6,12 +6,13 @@ import '../services/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../services/locale_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'breed_detail_screen.dart';
+import '../services/dog_breed_service.dart';
 
 class ScanResultScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final Map<String, dynamic> args =
-        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final List<DogBreed> results = args['results'];
     final String imagePath = args['imagePath'];
     final localizations = AppLocalizations.of(context);
@@ -146,11 +147,38 @@ class ScanResultScreen extends StatelessWidget {
       onTap:
           isError
               ? null
-              : () {
+              : () async {
+                // 데이터베이스에서 견종 정보 가져오기
+                final breedService = DogBreedService();
+                List<DogBreed> allBreeds = await breedService.getAllBreeds();
+                DogBreed? matchingBreed = allBreeds.firstWhere(
+                  (b) => b.nameEn.toLowerCase().trim() == breed.nameEn.toLowerCase().trim() ||
+                        b.nameKo == breed.nameKo,
+                  orElse: () => breed,
+                );
+
+                // 데이터베이스에서 가져온 정보로 업데이트
+                final updatedBreed = DogBreed(
+                  id: matchingBreed.id,
+                  nameEn: matchingBreed.nameEn,
+                  nameKo: matchingBreed.nameKo,
+                  originEn: matchingBreed.originEn,
+                  originKo: matchingBreed.originKo,
+                  sizeEn: matchingBreed.sizeEn,
+                  sizeKo: matchingBreed.sizeKo,
+                  lifespanEn: matchingBreed.lifespanEn,
+                  lifespanKo: matchingBreed.lifespanKo,
+                  weight: matchingBreed.weight,
+                  descriptionEn: matchingBreed.descriptionEn,
+                  descriptionKo: matchingBreed.descriptionKo,
+                  imageUrl: 'assets/images/dog/${matchingBreed.nameKo}.jpg',
+                  confidence: breed.confidence,
+                );
+
                 Navigator.pushNamed(
                   context,
                   '/breed_detail',
-                  arguments: {'breed': breed},
+                  arguments: {'breed': updatedBreed},
                 );
               },
       child: Card(
@@ -164,21 +192,30 @@ class ScanResultScreen extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.grey[300],
-                    backgroundImage:
-                        isError
-                            ? AssetImage('assets/images/error.png')
-                            : AssetImage(breed.imageUrl),
-                    onBackgroundImageError: (exception, stackTrace) {
-                      print('Error loading image: $exception');
-                    },
-                    child: isError ? null : Icon(
-                      Icons.pets,
-                      color: Colors.grey[600],
-                      size: 30,
-                    ),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: isError
+                        ? Image.asset(
+                            'assets/images/error.png',
+                            width: MediaQuery.of(context).size.width * 0.12,
+                            height: MediaQuery.of(context).size.width * 0.12,
+                            fit: BoxFit.cover,
+                          )
+                        : Image.asset(
+                            'assets/images/dog/${breed.nameKo}.jpg',
+                            width: MediaQuery.of(context).size.width * 0.12,
+                            height: MediaQuery.of(context).size.width * 0.12,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              print('Error loading image: $error');
+                              return Container(
+                                width: MediaQuery.of(context).size.width * 0.12,
+                                height: MediaQuery.of(context).size.width * 0.12,
+                                color: Colors.grey[300],
+                                child: Icon(Icons.pets, color: Colors.grey[600]),
+                              );
+                            },
+                          ),
                   ),
                   SizedBox(width: 16),
                   Expanded(
@@ -236,6 +273,7 @@ class ScanResultScreen extends StatelessWidget {
                     ),
                   ],
                 ),
+              SizedBox(height: 12),
             ],
           ),
         ),
