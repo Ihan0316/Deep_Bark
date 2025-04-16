@@ -44,7 +44,7 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
     try {
       // 현재 언어 코드를 전달
       final content = await _breedService.getWikipediaContent(
-          breed.name,
+          localeProvider.locale.languageCode == 'ko' ? breed.nameKo : breed.nameEn,
           localeProvider.locale.languageCode
       );
       setState(() {
@@ -70,16 +70,17 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
 
     String getWikipediaUrl() {
       String langCode = localeProvider.locale.languageCode;
+      String breedName = localeProvider.locale.languageCode == 'ko' ? breed.nameKo : breed.nameEn;
       switch(langCode) {
-        case 'ko': return 'https://ko.wikipedia.org/wiki/${breed.name}';
-        case 'en': return 'https://en.wikipedia.org/wiki/${breed.name}';
-        default: return 'https://ko.wikipedia.org/wiki/${breed.name}';
+        case 'ko': return 'https://ko.wikipedia.org/wiki/${Uri.encodeComponent(breedName)}';
+        case 'en': return 'https://en.wikipedia.org/wiki/${Uri.encodeComponent(breedName)}';
+        default: return 'https://ko.wikipedia.org/wiki/${Uri.encodeComponent(breedName)}';
       }
     }
 
     return Scaffold(
         appBar: AppBar(
-          title: Text(breed.name),
+          title: Text(localeProvider.locale.languageCode == 'ko' ? breed.nameKo : breed.nameEn),
           actions: _showWebView ? [
             IconButton(
               icon: Icon(Icons.close),
@@ -101,21 +102,34 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
                 Container(
                   width: double.infinity,
                   height: MediaQuery.of(context).size.height * 0.35,
-                  child: CachedNetworkImage(
-                    imageUrl: breed.imageUrl!,
+                  child: Image.asset(
+                    breed.imageUrl!,
                     fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      color: Colors.grey[300],
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      color: Colors.grey[300],
-                      child: Center(
-                        child: Icon(Icons.pets, size: MediaQuery.of(context).size.width * 0.2, color: Colors.grey[600]),
-                      ),
-                    ),
+                    errorBuilder: (context, error, stackTrace) {
+                      print('Error loading image: $error');
+                      return Container(
+                        color: Colors.grey[300],
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.pets, 
+                                size: MediaQuery.of(context).size.width * 0.2, 
+                                color: Colors.grey[600]
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                '이미지를 불러올 수 없습니다',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
 
@@ -142,11 +156,10 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
                               ),
                             ),
                             SizedBox(height: 12),
-                            _buildInfoRow(localizations.translate('origin'), breed.origin ?? '-'),
-                            _buildInfoRow(localizations.translate('size'), breed.size ?? '-'),
-                            _buildInfoRow(localizations.translate('weight'), breed.weight ?? '-'),
-                            _buildInfoRow(localizations.translate('lifespan'), breed.lifespan ?? '-'),
-                            _buildInfoRow(localizations.translate('temperament'), breed.temperament ?? '-'),
+                            _buildInfoRow(localizations.translate('origin'), localeProvider.locale.languageCode == 'ko' ? breed.originKo : breed.originEn),
+                            _buildInfoRow(localizations.translate('size'), localeProvider.locale.languageCode == 'ko' ? breed.sizeKo : breed.sizeEn),
+                            _buildInfoRow(localizations.translate('weight'), breed.weight),
+                            _buildInfoRow(localizations.translate('lifespan'), localeProvider.locale.languageCode == 'ko' ? breed.lifespanKo : breed.lifespanEn),
                           ],
                         ),
                       ),

@@ -10,15 +10,15 @@ import 'package:cached_network_image/cached_network_image.dart';
 class ScanResultScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final Map<String, dynamic> args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final Map<String, dynamic> args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     final List<DogBreed> results = args['results'];
     final String imagePath = args['imagePath'];
     final localizations = AppLocalizations.of(context);
+    final localeProvider = Provider.of<LocaleProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(localizations.translate('analysis_result')),
-      ),
+      appBar: AppBar(title: Text(localizations.translate('analysis_result'))),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -41,10 +41,7 @@ class ScanResultScreen extends StatelessWidget {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.file(
-                    File(imagePath),
-                    fit: BoxFit.cover,
-                  ),
+                  child: Image.file(File(imagePath), fit: BoxFit.cover),
                 ),
               ),
 
@@ -76,26 +73,30 @@ class ScanResultScreen extends StatelessWidget {
                           children: [
                             CircleAvatar(
                               radius: 30,
-                              backgroundImage: AssetImage('assets/images/error.png'),
+                              backgroundImage: AssetImage(
+                                'assets/images/error.png',
+                              ),
                             ),
                             SizedBox(width: 16),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('다른 이미지로 시도해주세요!',
+                                  Text(
+                                    '다른 이미지로 시도해주세요!',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
                                     ),
                                   ),
                                   SizedBox(height: 8),
-                                  Text('옷을 입지 않은 전신사진을 넣어주세요!!',
+                                  Text(
+                                    '옷을 입지 않은 전신사진을 넣어주세요!!',
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Colors.grey[600],
                                     ),
-                                  )
+                                  ),
                                 ],
                               ),
                             ),
@@ -106,7 +107,10 @@ class ScanResultScreen extends StatelessWidget {
                   ),
                 )
               else
-                ..._getFilteredResults(results).map((breed) => _buildResultItem(context, breed, results.indexOf(breed))),
+                ..._getFilteredResults(results).map(
+                  (breed) =>
+                      _buildResultItem(context, breed, results.indexOf(breed)),
+                ),
 
               SizedBox(height: 24),
             ],
@@ -118,14 +122,17 @@ class ScanResultScreen extends StatelessWidget {
 
   List<DogBreed> _getFilteredResults(List<DogBreed> results) {
     // 정상 결과만 필터링
-    final validResults = results.where((breed) => (breed.confidence ?? 0) >= 30).toList();
-    
+    final validResults =
+        results.where((breed) => (breed.confidence ?? 0) >= 30).toList();
+
     if (validResults.isEmpty) {
       // 모든 결과가 분석 오류인 경우 첫 번째 결과만 반환
       return [results.first];
     } else {
       // 정상 결과가 있는 경우 상위 2개 결과만 반환
-      validResults.sort((a, b) => (b.confidence ?? 0).compareTo(a.confidence ?? 0));
+      validResults.sort(
+        (a, b) => (b.confidence ?? 0).compareTo(a.confidence ?? 0),
+      );
       return validResults.take(2).toList();
     }
   }
@@ -133,21 +140,23 @@ class ScanResultScreen extends StatelessWidget {
   Widget _buildResultItem(BuildContext context, DogBreed breed, int index) {
     final localizations = AppLocalizations.of(context);
     final bool isError = (breed.confidence ?? 0) < 30;
+    final localeProvider = Provider.of<LocaleProvider>(context);
 
     return GestureDetector(
-      onTap: isError ? null : () {
-        Navigator.pushNamed(
-          context,
-          '/breed_detail',
-          arguments: {'breed': breed},
-        );
-      },
+      onTap:
+          isError
+              ? null
+              : () {
+                Navigator.pushNamed(
+                  context,
+                  '/breed_detail',
+                  arguments: {'breed': breed},
+                );
+              },
       child: Card(
         margin: EdgeInsets.only(bottom: 12),
         elevation: 3,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Column(
@@ -157,13 +166,19 @@ class ScanResultScreen extends StatelessWidget {
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundImage: isError 
-                      ? AssetImage('assets/images/error.png')
-                      : (breed.imageUrl != null
-                          ? (breed.imageUrl!.startsWith('assets/')
-                              ? AssetImage(breed.imageUrl!)
-                              : CachedNetworkImageProvider(breed.imageUrl!))
-                          : AssetImage('assets/images/dog_placeholder.png') as ImageProvider),
+                    backgroundColor: Colors.grey[300],
+                    backgroundImage:
+                        isError
+                            ? AssetImage('assets/images/error.png')
+                            : AssetImage(breed.imageUrl),
+                    onBackgroundImageError: (exception, stackTrace) {
+                      print('Error loading image: $exception');
+                    },
+                    child: isError ? null : Icon(
+                      Icons.pets,
+                      color: Colors.grey[600],
+                      size: 30,
+                    ),
                   ),
                   SizedBox(width: 16),
                   Expanded(
@@ -171,13 +186,15 @@ class ScanResultScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          isError ? '다른 이미지로 시도해주세요!' : '${index + 1}. ${breed.name}',
+                          isError
+                              ? '다른 이미지로 시도해주세요!'
+                              : '${index + 1}. ${localeProvider.locale.languageCode == 'ko' ? breed.nameKo : breed.nameEn}',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
                             color: isError ? Colors.black : null,
                           ),
-                        )
+                        ),
                       ],
                     ),
                   ),
@@ -185,39 +202,40 @@ class ScanResultScreen extends StatelessWidget {
               ),
               SizedBox(height: 12),
               // 신뢰도 표시 바
-              if (!isError) Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        localizations.translate('match_rate'),
-                        style: TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                      Text(
-                        '${breed.confidence?.toStringAsFixed(1) ?? 0}%',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange,
+              if (!isError)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          localizations.translate('match_rate'),
+                          style: TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                        Text(
+                          '${breed.confidence?.toStringAsFixed(1) ?? 0}%',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 4),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: (breed.confidence ?? 0) / 100,
+                        minHeight: 10,
+                        backgroundColor: Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          _getConfidenceColor(breed.confidence ?? 0),
                         ),
                       ),
-                    ],
-                  ),
-                  SizedBox(height: 4),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: LinearProgressIndicator(
-                      value: (breed.confidence ?? 0) / 100,
-                      minHeight: 10,
-                      backgroundColor: Colors.grey[300],
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        _getConfidenceColor(breed.confidence ?? 0),
-                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
             ],
           ),
         ),

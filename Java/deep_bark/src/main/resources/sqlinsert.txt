@@ -1,4 +1,4 @@
-LOAD DATA LOCAL INFILE '/경로/dog_breeds.csv'
+LOAD DATA LOCAL INFILE '/src/main/resources/dog_breeds.csv'
 INTO TABLE dog_breeds
 FIELDS TERMINATED BY ',' ENCLOSED BY '"'
 LINES TERMINATED BY '\n'

@@ -9,24 +9,33 @@ import lombok.Setter;
 @Getter
 @Setter
 public class DogBreed {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String name;
+    private String nameEn; // 영어 이름
 
-    @Column(length = 1000)
-    private String description;
+    @Column(nullable = false)
+    private String nameKo; // 한국어 이름
 
-    private String imageUrl;
+    private String originEn; // 영어 원산지
+    private String originKo; // 한국어 원산지
 
-    @Column(length = 1000)
-    private String characteristics;
+    private String sizeEn; // 영어 크기
+    private String sizeKo; // 한국어 크기
 
-    private String size;
-    private String temperament;
-    private String lifeSpan;
-    private String origin;
-} 
+    private String lifespanEn; // 영어 수명
+    private String lifespanKo; // 한국어 수명
+
+    private String weight; // 무게
+
+    @Lob
+    @Column
+    private String descriptionEn; // 영어 설명
+
+    @Lob
+    @Column
+    private String descriptionKo; // 한국어 설명
+}

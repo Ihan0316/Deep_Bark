@@ -24,6 +24,7 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
   late TabController _tabController;
+  late LocaleProvider _localeProvider;
 
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
@@ -34,6 +35,7 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_handleTabChange);
+    _localeProvider = Provider.of<LocaleProvider>(context, listen: false);
     _loadBreeds();
   }
 
@@ -54,28 +56,75 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
 
   Future<void> _loadBreeds() async {
     try {
-      final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-      final languageCode = localeProvider.locale.languageCode;
+      setState(() {
+        _isLoading = true;
+      });
 
-      final breeds = await _breedService.getAllBreeds(languageCode);
+      final breeds = await _breedService.getAllBreeds();
+
+      // 국가별 좌표 매핑
+      final Map<String, models.LatLng> countryCoordinates = {
+        // 한글 국가명
+        '영국': models.LatLng(latitude: 51.5074, longitude: -0.1278),
+        '독일': models.LatLng(latitude: 52.5200, longitude: 13.4050),
+        '프랑스': models.LatLng(latitude: 48.8566, longitude: 2.3522),
+        '미국': models.LatLng(latitude: 37.0902, longitude: -95.7129),
+        '일본': models.LatLng(latitude: 35.6762, longitude: 139.6503),
+        '대한민국': models.LatLng(latitude: 37.5665, longitude: 126.9780),
+        '중국': models.LatLng(latitude: 35.8617, longitude: 104.1954),
+        '러시아': models.LatLng(latitude: 55.7558, longitude: 37.6173),
+        '이탈리아': models.LatLng(latitude: 41.9028, longitude: 12.4964),
+        '몰타': models.LatLng(latitude: 35.9375, longitude: 14.3754),
+        '멕시코': models.LatLng(latitude: 23.6345, longitude: -102.5528),
+        // 깨진 문자열에 대한 매핑 추가
+        'íëì¤': models.LatLng(latitude: 48.8566, longitude: 2.3522), // 프랑스
+        'ì¤êµ­': models.LatLng(latitude: 35.8617, longitude: 104.1954), // 중국
+        'ìêµ­': models.LatLng(latitude: 51.5074, longitude: -0.1278), // 영국
+        'ëì¼': models.LatLng(latitude: 52.5200, longitude: 13.4050), // 독일
+        'ë¬ìì': models.LatLng(latitude: 55.7558, longitude: 37.6173), // 러시아
+        'ì¼ë³¸': models.LatLng(latitude: 35.6762, longitude: 139.6503), // 일본
+      };
 
       List<models.DogBreed> updatedBreeds = [];
       for (var breed in breeds) {
         if (breed.originLatLng == null) {
           try {
-            final locations = await locationFromAddress(breed.origin);
-            if (locations.isNotEmpty) {
-              final location = locations.first;
-              final latLng = models.LatLng(
-                  latitude: location.latitude,
-                  longitude: location.longitude
-              );
-              updatedBreeds.add(breed.copyWith(originLatLng: latLng));
+            // 국가 이름 추출 및 정제
+            String originText = breed.originKo;
+            String countryName = '';
+
+            // 괄호 안의 내용 제거
+            originText = originText.replaceAll(RegExp(r'\([^)]*\)'), '').trim();
+            
+            // 쉼표나 공백으로 구분된 경우 첫 번째 부분만 사용
+            if (originText.contains(',')) {
+              countryName = originText.split(',')[0].trim();
+            } else if (originText.contains(' ')) {
+              countryName = originText.split(' ')[0].trim();
             } else {
-              updatedBreeds.add(breed);
+              countryName = originText;
+            }
+
+            // 매핑된 좌표가 있는지 확인
+            if (countryCoordinates.containsKey(countryName)) {
+              updatedBreeds.add(breed.copyWith(originLatLng: countryCoordinates[countryName]));
+            } else {
+              print('좌표를 찾을 수 없음: ${breed.nameEn} (원산지: $countryName)');
+              // 깨진 문자열로도 한번 더 시도
+              if (countryCoordinates.containsKey(breed.originKo)) {
+                updatedBreeds.add(breed.copyWith(originLatLng: countryCoordinates[breed.originKo]));
+              } else {
+                // 국가 이름 매핑 시도
+                String? mappedCountry = _mapCountryName(countryName);
+                if (mappedCountry != null && countryCoordinates.containsKey(mappedCountry)) {
+                  updatedBreeds.add(breed.copyWith(originLatLng: countryCoordinates[mappedCountry]));
+                } else {
+                  updatedBreeds.add(breed);
+                }
+              }
             }
           } catch (e) {
-            print('지오코딩 오류: ${e.toString()}');
+            print('좌표 처리 오류 (${breed.nameEn}): ${e.toString()}');
             updatedBreeds.add(breed);
           }
         } else {
@@ -83,24 +132,48 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
         }
       }
 
-      setState(() {
-        _breeds = updatedBreeds;
-        _filteredBreeds = updatedBreeds;
-      });
+      if (mounted) {
+        setState(() {
+          _breeds = updatedBreeds;
+          _filteredBreeds = updatedBreeds;
+          _isLoading = false;
+        });
 
-      _setupMarkers().then((_) => setState(() {
-        _isLoading = false;
-      }));
+        await _setupMarkers();
+      }
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      final localizations = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(
-            localizations.translate('failed_to_load_breeds') +
-                ': ${e.toString()}')),
-      );
+      print('견종 목록 로딩 에러: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _breeds = [];
+          _filteredBreeds = [];
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('데이터를 불러오는데 실패했습니다'),
+                SizedBox(height: 4),
+                Text(
+                  '네트워크 연결을 확인하고 다시 시도해주세요',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+            action: SnackBarAction(
+              label: '다시 시도',
+              onPressed: () {
+                _loadBreeds();
+              },
+            ),
+            duration: Duration(seconds: 10),
+          ),
+        );
+      }
     }
   }
 
@@ -109,14 +182,14 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
     for (var breed in _filteredBreeds.where((breed) => breed.originLatLng != null)) {
       Marker pawMarker = await GoogleMapsCustomMarker.createCustomMarker(
         marker: Marker(
-          markerId: MarkerId(breed.id),
+          markerId: MarkerId(breed.id.toString()),
           position: LatLng(
               breed.originLatLng!.latitude,
               breed.originLatLng!.longitude
           ),
           infoWindow: InfoWindow(
-            title: breed.name,
-            snippet: breed.origin,
+            title: _localeProvider.locale.languageCode == 'ko' ? breed.nameKo : breed.nameEn,
+            snippet: _localeProvider.locale.languageCode == 'ko' ? breed.originKo : breed.originEn,
             onTap: () {
               Navigator.pushNamed(
                 context,
@@ -141,8 +214,12 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
         _filteredBreeds = _breeds;
       } else {
         _filteredBreeds = _breeds.where((breed) {
-          return breed.name.toLowerCase().contains(query.toLowerCase()) ||
-              breed.origin.toLowerCase().contains(query.toLowerCase());
+          return (_localeProvider.locale.languageCode == 'ko' ? breed.nameKo : breed.nameEn)
+              .toLowerCase()
+              .contains(query.toLowerCase()) ||
+              (_localeProvider.locale.languageCode == 'ko' ? breed.originKo : breed.originEn)
+              .toLowerCase()
+              .contains(query.toLowerCase());
         }).toList();
       }
       _setupMarkers().then((_) => setState(() {}));
@@ -203,12 +280,13 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
                       leading: breed.imageUrl != null
                           ? ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
+                        child: Image.asset(
                           breed.imageUrl!,
                           width: MediaQuery.of(context).size.width * 0.12,
                           height: MediaQuery.of(context).size.width * 0.12,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
+                            print('Error loading image: $error');
                             return Container(
                               width: MediaQuery.of(context).size.width * 0.12,
                               height: MediaQuery.of(context).size.width * 0.12,
@@ -225,13 +303,13 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
                         child: Icon(Icons.pets, color: Colors.grey[600]),
                       ),
                       title: Text(
-                        breed.name,
+                        _localeProvider.locale.languageCode == 'ko' ? breed.nameKo : breed.nameEn,
                         style: TextStyle(
                           fontSize: MediaQuery.of(context).size.width * 0.04,
                         ),
                       ),
                       subtitle: Text(
-                        '${localizations.translate('origin')}: ${breed.origin}',
+                        '${localizations.translate('origin')}: ${_localeProvider.locale.languageCode == 'ko' ? breed.originKo : breed.originEn}',
                         style: TextStyle(
                           fontSize: MediaQuery.of(context).size.width * 0.035,
                         ),
@@ -296,5 +374,28 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
         ],
       ),
     );
+  }
+
+  // 국가 이름 매핑 함수 추가
+  String? _mapCountryName(String countryName) {
+    final Map<String, String> countryNameMap = {
+      'íëì¤': '프랑스',
+      'ì¤êµ­': '중국',
+      'ìêµ­': '영국',
+      'ëì¼': '독일',
+      'ë¬ìì': '러시아',
+      'ì¼ë³¸': '일본',
+      '프랑스': '프랑스',
+      '중국': '중국',
+      '영국': '영국',
+      '독일': '독일',
+      '러시아': '러시아',
+      '일본': '일본',
+      '대한민국': '대한민국',
+      '이탈리아': '이탈리아',
+      '몰타': '몰타',
+      '멕시코': '멕시코',
+    };
+    return countryNameMap[countryName];
   }
 }
