@@ -20,6 +20,10 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
   bool _showWebView = false;
   late WebViewController _webViewController;
 
+  String _cleanBreedName(String name) {
+    return name.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -80,7 +84,7 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
 
     return Scaffold(
         appBar: AppBar(
-          title: Text(localeProvider.locale.languageCode == 'ko' ? breed.nameKo : breed.nameEn),
+          title: Text(_cleanBreedName(localeProvider.locale.languageCode == 'ko' ? breed.nameKo : breed.nameEn)),
           actions: _showWebView ? [
             IconButton(
               icon: Icon(Icons.close),
