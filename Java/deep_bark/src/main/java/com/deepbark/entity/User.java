@@ -1,6 +1,5 @@
 package com.deepbark.entity;
 
-import com.deepbark.entity.DateAudit;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -12,8 +11,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import java.util.HashSet;
-import java.util.Set;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -48,12 +45,6 @@ public class User extends DateAudit {
     @Size(max = 100)
     @JsonIgnore
     private String password;
-
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<Role> roles = new HashSet<>();
 
     public User() {
     }
@@ -96,11 +87,4 @@ public class User extends DateAudit {
         this.password = password;
     }
 
-    public Set<Role> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
-    }
-} 
+}

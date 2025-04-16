@@ -1,0 +1,6 @@
+LOAD DATA LOCAL INFILE '/src/main/resources/dog_breeds.csv'
+INTO TABLE dog_breeds
+FIELDS TERMINATED BY ',' ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 LINES
+(name_en, name_ko, origin_en, origin_ko, size_en, size_ko, lifespan_en, lifespan_ko, weight, description_en, description_ko);

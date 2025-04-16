@@ -1,56 +1,71 @@
 class DogBreed {
-  final String id;
-  final String name;
-  final String origin;
-  final String description;
-  final String? imageUrl;
-  final String? size;
-  final String? weight;
-  final String? lifespan;
-  final String? temperament;
+  final int id;
+  final String nameEn;
+  final String nameKo;
+  final String originEn;
+  final String originKo;
+  final String sizeEn;
+  final String sizeKo;
+  final String lifespanEn;
+  final String lifespanKo;
+  final String weight;
+  final String descriptionEn;
+  final String descriptionKo;
+  final String imageUrl;
   final LatLng? originLatLng;
-  final double? confidence; // 신뢰도 필드 추가
+  final double? confidence;
 
   DogBreed({
     required this.id,
-    required this.name,
-    required this.origin,
-    required this.description,
-    this.imageUrl,
-    this.size,
-    this.weight,
-    this.lifespan,
-    this.temperament,
+    required this.nameEn,
+    required this.nameKo,
+    required this.originEn,
+    required this.originKo,
+    required this.sizeEn,
+    required this.sizeKo,
+    required this.lifespanEn,
+    required this.lifespanKo,
+    required this.weight,
+    required this.descriptionEn,
+    required this.descriptionKo,
+    required this.imageUrl,
     this.originLatLng,
-    this.confidence, // 생성자에 추가
+    this.confidence,
   });
 
-  // copyWith 메서드 수정
   DogBreed copyWith({
-    String? id,
-    String? name,
-    String? origin,
-    String? description,
-    String? imageUrl,
-    String? size,
+    int? id,
+    String? nameEn,
+    String? nameKo,
+    String? originEn,
+    String? originKo,
+    String? sizeEn,
+    String? sizeKo,
+    String? lifespanEn,
+    String? lifespanKo,
     String? weight,
-    String? lifespan,
-    String? temperament,
+    String? descriptionEn,
+    String? descriptionKo,
+    String? imageUrl,
     LatLng? originLatLng,
-    double? confidence, // copyWith에 추가
+    double? confidence,
   }) {
     return DogBreed(
       id: id ?? this.id,
-      name: name ?? this.name,
-      origin: origin ?? this.origin,
-      description: description ?? this.description,
-      imageUrl: imageUrl ?? this.imageUrl,
-      size: size ?? this.size,
+      nameEn: nameEn ?? this.nameEn,
+      nameKo: nameKo ?? this.nameKo,
+      originEn: originEn ?? this.originEn,
+      originKo: originKo ?? this.originKo,
+      sizeEn: sizeEn ?? this.sizeEn,
+      sizeKo: sizeKo ?? this.sizeKo,
+      lifespanEn: lifespanEn ?? this.lifespanEn,
+      lifespanKo: lifespanKo ?? this.lifespanKo,
       weight: weight ?? this.weight,
-      lifespan: lifespan ?? this.lifespan,
-      temperament: temperament ?? this.temperament,
+      descriptionEn: descriptionEn ?? this.descriptionEn,
+      descriptionKo: descriptionKo ?? this.descriptionKo,
+      imageUrl: imageUrl ?? this.imageUrl,
       originLatLng: originLatLng ?? this.originLatLng,
-      confidence: confidence ?? this.confidence, // 반환에 추가
+      confidence: confidence ?? this.confidence,
     );
   }
 }

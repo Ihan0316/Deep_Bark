@@ -1,8 +1,7 @@
 import 'dart:io';
 import '../models/dog_breed_model.dart';
-import '../data/dog_breeds_data.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'dart:convert' show json, utf8;
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:async/async.dart';
@@ -13,7 +12,11 @@ class DogBreedService {
   factory DogBreedService() => _instance;
   DogBreedService._internal();
 
-  final String baseUrl = 'http://10.0.2.2:5000';
+  // 실제 서버 주소로 변경
+  static const String baseUrl = 'http://10.0.2.2:8080'; // Android 에뮬레이터용
+  // static const String baseUrl = 'http://localhost:8080'; // 웹용
+  // static const String baseUrl = 'http://127.0.0.1:8080'; // iOS 시뮬레이터용
+
   final ImageCacheService _imageCache = ImageCacheService();
   final Map<String, String> _contentCache = {};
   final Map<String, String?> _imageUrlCache = {};
@@ -56,7 +59,7 @@ class DogBreedService {
 
   Future<List<DogBreed>> analyzeImage(File image) async {
     try {
-      var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/classify'));
+      var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/classify'));
       var stream = http.ByteStream(DelegatingStream.typed(image.openRead()));
       var length = await image.length();
       var multipartFile = http.MultipartFile('image', stream, length, filename: basename(image.path));
@@ -91,31 +94,40 @@ class DogBreedService {
           if (cachedContent == null) _contentCache[koreanBreedName] = description;
           if (cachedImageUrl == null) _imageUrlCache[koreanBreedName] = imageUrl;
 
-          List<DogBreed> allBreeds = await getAllBreeds('ko');
+          List<DogBreed> allBreeds = await getAllBreeds();
           DogBreed? matchingBreed = allBreeds.firstWhere(
-            (breed) => breed.name.toLowerCase() == koreanBreedName.toLowerCase(),
+            (breed) => breed.nameEn.toLowerCase() == englishBreedName.toLowerCase(),
             orElse: () => DogBreed(
-              id: predictions.indexOf(prediction).toString(),
-              name: koreanBreedName,
-              origin: '알 수 없음',
-              description: description,
-              size: '-',
+              id: predictions.indexOf(prediction),
+              nameEn: englishBreedName,
+              nameKo: koreanBreedName,
+              originEn: '알 수 없음',
+              originKo: '알 수 없음',
+              sizeEn: '-',
+              sizeKo: '-',
+              lifespanEn: '-',
+              lifespanKo: '-',
               weight: '-',
-              lifespan: '-',
-              temperament: '-',
+              descriptionEn: '이 견종에 대한 위키백과 정보를 찾을 수 없습니다.',
+              descriptionKo: '이 견종에 대한 위키백과 정보를 찾을 수 없습니다.',
+              imageUrl: 'assets/images/error.png',
             ),
           );
 
           final breed = DogBreed(
-            id: predictions.indexOf(prediction).toString(),
-            name: koreanBreedName,
-            origin: matchingBreed.origin,
-            description: description,
+            id: predictions.indexOf(prediction),
+            nameEn: englishBreedName,
+            nameKo: koreanBreedName,
+            originEn: matchingBreed.originEn,
+            originKo: matchingBreed.originKo,
+            sizeEn: matchingBreed.sizeEn,
+            sizeKo: matchingBreed.sizeKo,
+            lifespanEn: matchingBreed.lifespanEn,
+            lifespanKo: matchingBreed.lifespanKo,
+            weight: matchingBreed.weight,
+            descriptionEn: description,
+            descriptionKo: description,
             imageUrl: imageUrl ?? matchingBreed.imageUrl,
-            size: matchingBreed.size ?? '-',
-            weight: matchingBreed.weight ?? '-',
-            lifespan: matchingBreed.lifespan ?? '-',
-            temperament: matchingBreed.temperament ?? '-',
             confidence: confidence,
           );
 
@@ -132,10 +144,18 @@ class DogBreedService {
       print('이미지 분석 오류: $e');
       return [
         DogBreed(
-          id: '1',
-          name: '다른 이미지로 시도해주세요! $e\n옷을 입지 않은 전신사진을 넣어주세요!!',
-          origin: '알 수 없음',
-          description: '이미지 분석 중 오류가 발생했습니다:',
+          id: 1,
+          nameEn: '다른 이미지로 시도해주세요! $e\n옷을 입지 않은 전신사진을 넣어주세요!!',
+          nameKo: '다른 이미지로 시도해주세요! $e\n옷을 입지 않은 전신사진을 넣어주세요!!',
+          originEn: '알 수 없음',
+          originKo: '알 수 없음',
+          sizeEn: '-',
+          sizeKo: '-',
+          lifespanEn: '-',
+          lifespanKo: '-',
+          weight: '-',
+          descriptionEn: '이미지 분석 중 오류가 발생했습니다:',
+          descriptionKo: '이미지 분석 중 오류가 발생했습니다:',
           imageUrl: 'assets/images/error.png',
         ),
       ];
@@ -206,22 +226,86 @@ class DogBreedService {
     }
   }
 
-  Future<List<DogBreed>> getAllBreeds([String languageCode = 'ko']) async {
-    List<DogBreed> breeds = DogBreedsData.getInitialBreeds(languageCode);
-    
-    // 캐시된 견종 정보가 있는지 확인
-    List<Future<DogBreed>> breedFutures = breeds.map((breed) async {
-      if (_breedCache.containsKey(breed.name)) {
-        return _breedCache[breed.name]!;
+  Future<List<DogBreed>> getAllBreeds() async {
+    try {
+      // 서버 연결 상태 확인
+      bool isConnected = await checkServerConnection();
+      if (!isConnected) {
+        throw Exception('서버에 연결할 수 없습니다. 네트워크 연결을 확인해주세요.');
       }
 
-      String? imageUrl = _imageUrlCache[breed.name] ?? await getWikipediaImage(breed.name, languageCode);
-      final updatedBreed = imageUrl != null ? breed.copyWith(imageUrl: imageUrl) : breed;
-      _addToBreedCache(breed.name, updatedBreed);
-      return updatedBreed;
-    }).toList();
+      final response = await _httpClient.get(
+        Uri.parse('$baseUrl/api/breeds'),
+        headers: {'Content-Type': 'application/json'},
+      );
 
-    return await Future.wait(breedFutures);
+      if (response.statusCode == 200) {
+        List<dynamic> jsonList = json.decode(utf8.decode(response.bodyBytes));
+        return jsonList.map((json) {
+          String nameKo = json['nameKo'];
+          return DogBreed(
+            id: json['id'] is String ? int.parse(json['id']) : json['id'],
+            nameEn: json['nameEn'],
+            nameKo: nameKo,
+            originEn: json['originEn'],
+            originKo: json['originKo'],
+            sizeEn: json['sizeEn'],
+            sizeKo: json['sizeKo'],
+            lifespanEn: json['lifespanEn'],
+            lifespanKo: json['lifespanKo'],
+            weight: json['weight'],
+            descriptionEn: json['descriptionEn'],
+            descriptionKo: json['descriptionKo'],
+            imageUrl: 'assets/images/dog/${nameKo}.jpg',
+          );
+        }).toList();
+      } else {
+        print('서버 응답 코드: ${response.statusCode}');
+        print('서버 응답 내용: ${response.body}');
+        throw Exception('견종 목록을 불러오는데 실패했습니다. (상태 코드: ${response.statusCode})');
+      }
+    } catch (e) {
+      print('견종 목록 로딩 에러: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<DogBreed>> searchBreeds(String query) async {
+    try {
+      final response = await _httpClient.get(
+        Uri.parse('$baseUrl/api/breeds/search?query=$query'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        List<dynamic> jsonList = json.decode(utf8.decode(response.bodyBytes));
+        return jsonList.map((json) {
+          String nameKo = json['nameKo'];
+          return DogBreed(
+            id: json['id'] is String ? int.parse(json['id']) : json['id'],
+            nameEn: json['nameEn'],
+            nameKo: nameKo,
+            originEn: json['originEn'],
+            originKo: json['originKo'],
+            sizeEn: json['sizeEn'],
+            sizeKo: json['sizeKo'],
+            lifespanEn: json['lifespanEn'],
+            lifespanKo: json['lifespanKo'],
+            weight: json['weight'],
+            descriptionEn: json['descriptionEn'],
+            descriptionKo: json['descriptionKo'],
+            imageUrl: 'assets/images/dog/${nameKo}.jpg',
+          );
+        }).toList();
+      } else {
+        print('검색 응답 코드: ${response.statusCode}');
+        print('검색 응답 내용: ${response.body}');
+        throw Exception('견종 검색에 실패했습니다. (상태 코드: ${response.statusCode})');
+      }
+    } catch (e) {
+      print('견종 검색 에러: $e');
+      rethrow;
+    }
   }
 
   Future<String> getWikipediaContent(
@@ -311,6 +395,17 @@ class DogBreedService {
         return 'Error occurred while fetching Wikipedia information: $error';
       default:
         return 'Error occurred while fetching Wikipedia information: $error';
+    }
+  }
+
+  // 서버 연결 상태 확인
+  Future<bool> checkServerConnection() async {
+    try {
+      final response = await _httpClient.get(Uri.parse('$baseUrl/api/health'));
+      return response.statusCode == 200;
+    } catch (e) {
+      print('서버 연결 확인 실패: $e');
+      return false;
     }
   }
 
