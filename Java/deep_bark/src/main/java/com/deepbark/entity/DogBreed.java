@@ -31,11 +31,9 @@ public class DogBreed {
 
     private String weight; // 무게
 
-    @Lob
-    @Column
+    @Column(columnDefinition = "TEXT")
     private String descriptionEn; // 영어 설명
 
-    @Lob
-    @Column
+    @Column(columnDefinition = "TEXT")
     private String descriptionKo; // 한국어 설명
 }

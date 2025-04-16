@@ -14,9 +14,6 @@ class BreedDetailScreen extends StatefulWidget {
 }
 
 class _BreedDetailScreenState extends State<BreedDetailScreen> {
-  final DogBreedService _breedService = DogBreedService();
-  bool _isLoading = false;
-  String? _wikiContent;
   bool _showWebView = false;
   late WebViewController _webViewController;
 
@@ -29,40 +26,6 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
     super.initState();
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted);
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadWikiContent();
-    });
-  }
-
-  Future<void> _loadWikiContent() async {
-    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-    final DogBreed breed = args['breed'];
-    final localizations = AppLocalizations.of(context);
-    final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      // 현재 언어 코드를 전달
-      final content = await _breedService.getWikipediaContent(
-          localeProvider.locale.languageCode == 'ko' ? breed.nameKo : breed.nameEn,
-          localeProvider.locale.languageCode
-      );
-      setState(() {
-        _wikiContent = content;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${localizations.translate('load_info_failed')}: ${e.toString()}')),
-      );
-    }
   }
 
   @override
@@ -190,36 +153,18 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
                     ),
                     SizedBox(height: 8),
 
-                    _isLoading
-                        ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: CircularProgressIndicator(),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Text(
+                        localeProvider.locale.languageCode == 'ko'
+                            ? breed.descriptionKo
+                            : breed.descriptionEn,
+                        style: TextStyle(
+                          fontSize: 16,
+                          height: 1.5,
+                        ),
                       ),
-                    )
-                        : _wikiContent == null
-                        ? Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Text(
-                                localizations.translate('cannot_load_details'),
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ),
-                          )
-                        : Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(
-                              _wikiContent!,
-                              style: TextStyle(
-                                fontSize: 16,
-                                height: 1.5,
-                              ),
-                            ),
-                          ),
+                    ),
 
                     SizedBox(height: 20),
 
