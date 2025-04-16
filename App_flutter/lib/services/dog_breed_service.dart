@@ -377,6 +377,27 @@ class DogBreedService {
     }
   }
 
+  Future<Map<String, String>?> findMixDog(String breed1, String breed2) async {
+    try {
+      final response = await _httpClient.get(
+        Uri.parse('$baseUrl/api/mix-dogs/find?breed1=$breed1&breed2=$breed2'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(utf8.decode(response.bodyBytes));
+        return {
+          'nameEn': data['nameEn'],
+          'nameKo': data['nameKo'],
+        };
+      }
+      return null;
+    } catch (e) {
+      print('믹스견 조회 에러: $e');
+      return null;
+    }
+  }
+
   void dispose() {
     _httpClient.close();
     _contentCache.clear();
