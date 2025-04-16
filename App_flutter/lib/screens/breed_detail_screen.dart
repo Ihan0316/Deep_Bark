@@ -156,10 +156,20 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
                               ),
                             ),
                             SizedBox(height: 12),
-                            _buildInfoRow(localizations.translate('origin'), localeProvider.locale.languageCode == 'ko' ? breed.originKo : breed.originEn),
-                            _buildInfoRow(localizations.translate('size'), localeProvider.locale.languageCode == 'ko' ? breed.sizeKo : breed.sizeEn),
-                            _buildInfoRow(localizations.translate('weight'), breed.weight),
-                            _buildInfoRow(localizations.translate('lifespan'), localeProvider.locale.languageCode == 'ko' ? breed.lifespanKo : breed.lifespanEn),
+                            _buildInfoRow(localizations.translate('origin'), 
+                              localeProvider.locale.languageCode == 'ko' 
+                                ? (breed.originKo.isNotEmpty ? breed.originKo : '알 수 없음')
+                                : (breed.originEn.isNotEmpty ? breed.originEn : 'Unknown')),
+                            _buildInfoRow(localizations.translate('size'), 
+                              localeProvider.locale.languageCode == 'ko' 
+                                ? (breed.sizeKo.isNotEmpty ? breed.sizeKo : '알 수 없음')
+                                : (breed.sizeEn.isNotEmpty ? breed.sizeEn : 'Unknown')),
+                            _buildInfoRow(localizations.translate('weight'), 
+                              breed.weight.isNotEmpty ? breed.weight : '알 수 없음'),
+                            _buildInfoRow(localizations.translate('lifespan'), 
+                              localeProvider.locale.languageCode == 'ko' 
+                                ? (breed.lifespanKo.isNotEmpty ? breed.lifespanKo : '알 수 없음')
+                                : (breed.lifespanEn.isNotEmpty ? breed.lifespanEn : 'Unknown')),
                           ],
                         ),
                       ),
