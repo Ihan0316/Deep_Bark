@@ -22,12 +22,11 @@ MODEL_PATH = './model/allbreeds_multi_label_model_b4_remove_BG.pth'
 
 # 클래스 이름
 class_names = [
-    'Beagle', 'Bichon Frise', 'Border Collie', 'Cavalier King Charles spaniel', 'Chihuahua',
-    'ChowChow', 'Cocker Spaniel', 'Dachshund', 'Doberman', 'French Bull Dog',
-    'German Shepherd', 'Golden Retriever', 'Italian Greyhound', 'Jindo Dog', 'Malamute',
-    'Maltese', 'Miniature Schnauzer', 'Papillon', 'Pekingese', 'Pembroke Welsh Corgi',
-    'Pomeranian', 'Pug', 'Samoyed', 'Shiba Inu', 'Shih Tzu', 'Siberian Husky',
-    'Standard Poodle', 'Toy Poodle', 'West Highland White Terrier', 'Yorkshire Terrier'
+    'Beagle', 'Bichon Frise', 'Border Collie', 'Cavalier King Charles Spaniel', 'Chihuahua (dog breed)', 'ChowChow',
+    'Cocker Spaniel', 'Dachshund', 'Doberman', 'French Bulldog', 'German Shepherd', 'Golden Retriever',
+    'Italian Greyhound', 'Jindo Dog', 'Alaskan Malamute', 'Maltese dog', 'Miniature Schnauzer', 'Papillon dog',
+    'Pekingese', 'Pembroke Welsh Corgi', 'Pomeranian dog', 'Pug', 'Samoyed dog', 'Shiba Inu', 'Shih Tzu',
+    'Siberian Husky', 'Standard Poodle', 'Toy Poodle', 'West Highland White Terrier', 'Yorkshire Terrier'
 ]
 
 # 모델 로드

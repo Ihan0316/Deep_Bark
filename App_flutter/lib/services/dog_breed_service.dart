@@ -6,56 +6,25 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:async/async.dart';
 import 'image_cache_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class DogBreedService {
   static final DogBreedService _instance = DogBreedService._internal();
   factory DogBreedService() => _instance;
   DogBreedService._internal();
 
-  // 실제 서버 주소로 변경
-  static const String baseUrl = 'http://10.0.2.2:8080'; // Android 에뮬레이터용
-  // static const String baseUrl = 'http://localhost:8080'; // 웹용
-  // static const String baseUrl = 'http://127.0.0.1:8080'; // iOS 시뮬레이터용
-
-  final ImageCacheService _imageCache = ImageCacheService();
+  final http.Client _httpClient = http.Client();
+  final String baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8080';
   final Map<String, String> _contentCache = {};
   final Map<String, String?> _imageUrlCache = {};
   final Map<String, DogBreed> _breedCache = {};
-  final http.Client _httpClient = http.Client();
-  static const int _maxCacheSize = 100;
+  final int _maxCacheSize = 100;
+
+  final ImageCacheService _imageCache = ImageCacheService();
 
   // Flask 서버 URL (실제 서버 주소로 변경 필요)
   // 실제 기기나 iOS 시뮬레이터에서는 실제 IP 주소 사용 필요
   // final String baseUrl = 'http://10.100.201.41:5000';
-
-  // 영어 견종 이름을 한글로 변환하는 메서드
-  String _convertBreedNameToKorean(String englishName) {
-    // 영어-한글 견종 이름 매핑
-    final Map<String, String> breedNameMap = {
-      'Golden Retriever': '골든 리트리버',
-      'Welsh Corgi': '웰시 코기',
-      'Jindo Dog': '진돗개',
-      'Shiba Inu': '시바견',
-      'Chihuahua': '치와와 (개)',
-      'Dachshund': '닥스훈트',
-      'Labrador Retriever': '래브라도 리트리버',
-      'German Shepherd': '저먼 셰퍼드',
-      'Poodle': '푸들',
-      'Beagle': '비글',
-      'Bulldog': '불독',
-      'Pomeranian': '포메라니안',
-      'Husky': '허스키',
-      'Maltese': '말티즈',
-      'Shih Tzu': '시추',
-      'Yorkshire Terrier': '요크셔 테리어',
-      'Bichon Frise': '비숑 프리제',
-      'Cocker Spaniel': '코커 스패니얼',
-      'Border Collie': '보더 콜리',
-      'Samoyed': '사모예드',
-    };
-
-    return breedNameMap[englishName] ?? englishName;
-  }
 
   Future<List<DogBreed>> analyzeImage(File imageFile) async {
     try {
@@ -87,12 +56,10 @@ class DogBreedService {
         // 병렬 처리를 위한 Future 리스트
         List<Future<DogBreed>> breedFutures = predictions.map((prediction) async {
           String englishBreedName = prediction['class'];
-          String koreanBreedName = _convertBreedNameToKorean(englishBreedName);
           double confidence = prediction['confidence'];
 
           print('예측 결과:');
           print('- 견종(영문): $englishBreedName');
-          print('- 견종(한글): $koreanBreedName');
           print('- 신뢰도: $confidence%');
 
           // 데이터베이스에서 견종 정보 가져오기
@@ -102,7 +69,7 @@ class DogBreedService {
             orElse: () => DogBreed(
               id: predictions.indexOf(prediction),
               nameEn: englishBreedName,
-              nameKo: koreanBreedName,
+              nameKo: '알 수 없음',
               originEn: '알 수 없음',
               originKo: '알 수 없음',
               sizeEn: '-',
@@ -112,7 +79,7 @@ class DogBreedService {
               weight: '-',
               descriptionEn: '이 견종에 대한 정보를 찾을 수 없습니다.',
               descriptionKo: '이 견종에 대한 정보를 찾을 수 없습니다.',
-              imageUrl: 'assets/images/dog/${koreanBreedName}.jpg',
+              imageUrl: 'assets/images/dog/unknown.jpg',
             ),
           );
 

@@ -30,6 +30,10 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
   Set<Marker> _markers = {};
   bool _isMapReady = false;
 
+  String _cleanBreedName(String name) {
+    return name.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -188,7 +192,7 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
               breed.originLatLng!.longitude
           ),
           infoWindow: InfoWindow(
-            title: _localeProvider.locale.languageCode == 'ko' ? breed.nameKo : breed.nameEn,
+            title: _cleanBreedName(_localeProvider.locale.languageCode == 'ko' ? breed.nameKo : breed.nameEn),
             snippet: _localeProvider.locale.languageCode == 'ko' ? breed.originKo : breed.originEn,
             onTap: () {
               Navigator.pushNamed(
@@ -303,7 +307,7 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
                         child: Icon(Icons.pets, color: Colors.grey[600]),
                       ),
                       title: Text(
-                        _localeProvider.locale.languageCode == 'ko' ? breed.nameKo : breed.nameEn,
+                        _cleanBreedName(_localeProvider.locale.languageCode == 'ko' ? breed.nameKo : breed.nameEn),
                         style: TextStyle(
                           fontSize: MediaQuery.of(context).size.width * 0.04,
                         ),

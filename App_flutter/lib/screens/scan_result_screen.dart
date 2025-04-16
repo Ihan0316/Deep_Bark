@@ -138,6 +138,10 @@ class ScanResultScreen extends StatelessWidget {
     }
   }
 
+  String _cleanBreedName(String name) {
+    return name.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
+  }
+
   Widget _buildResultItem(BuildContext context, DogBreed breed, int index) {
     final localizations = AppLocalizations.of(context);
     final bool isError = (breed.confidence ?? 0) < 30;
@@ -225,7 +229,7 @@ class ScanResultScreen extends StatelessWidget {
                         Text(
                           isError
                               ? '다른 이미지로 시도해주세요!'
-                              : '${index + 1}. ${localeProvider.locale.languageCode == 'ko' ? breed.nameKo : breed.nameEn}',
+                              : '${index + 1}. ${_cleanBreedName(localeProvider.locale.languageCode == 'ko' ? breed.nameKo : breed.nameEn)}',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
