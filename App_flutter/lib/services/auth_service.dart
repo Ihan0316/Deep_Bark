@@ -8,6 +8,7 @@ import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as KakaoSDK;
 import '../models/user.dart' as MyAppUser;
 import 'api_service.dart';
 import 'dart:io';
+import 'dart:async';
 
 class AuthService extends ChangeNotifier {
   bool _isLoggedIn = false;
@@ -30,6 +31,13 @@ class AuthService extends ChangeNotifier {
       'profile',
     ],
   );
+
+  // Debounce timers
+  Timer? _usernameDebounceTimer;
+  Timer? _emailDebounceTimer;
+
+  // Debounce duration in milliseconds
+  static const int _debounceDuration = 500;
 
   // Getters
   bool get isLoggedIn => _isLoggedIn;
@@ -561,4 +569,87 @@ class AuthService extends ChangeNotifier {
   bool isGoogleLogin() => _loginProvider == 'google';
   bool isKakaoLogin() => _loginProvider == 'kakao';
   bool isEmailLogin() => _loginProvider == 'email';
+
+  Future<bool> checkUsernameAvailability(String username) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiService.baseUrl}/api/users/check-username?username=$username'),
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(utf8.decode(response.bodyBytes));
+        return responseData['available'] ?? false;
+      } else {
+        throw Exception('사용자 이름 확인 중 오류가 발생했습니다.');
+      }
+    } catch (e) {
+      print('사용자 이름 확인 오류: $e');
+      throw e;
+    }
+  }
+
+  Future<bool> checkEmailAvailability(String email) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiService.baseUrl}/api/users/check-email?email=$email'),
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(utf8.decode(response.bodyBytes));
+        return responseData['available'] ?? false;
+      } else {
+        throw Exception('이메일 확인 중 오류가 발생했습니다.');
+      }
+    } catch (e) {
+      print('이메일 확인 오류: $e');
+      throw e;
+    }
+  }
+
+  // Debounced username check
+  void debouncedCheckUsername(String username, Function(bool) onResult) {
+    _usernameDebounceTimer?.cancel();
+    _usernameDebounceTimer = Timer(Duration(milliseconds: _debounceDuration), () async {
+      if (username.isEmpty) {
+        onResult(false);
+        return;
+      }
+      try {
+        final result = await checkUsernameAvailability(username);
+        onResult(result);
+      } catch (e) {
+        onResult(false);
+      }
+    });
+  }
+
+  // Debounced email check
+  void debouncedCheckEmail(String email, Function(bool) onResult) {
+    _emailDebounceTimer?.cancel();
+    _emailDebounceTimer = Timer(Duration(milliseconds: _debounceDuration), () async {
+      if (email.isEmpty || !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+        onResult(false);
+        return;
+      }
+      try {
+        final result = await checkEmailAvailability(email);
+        onResult(result);
+      } catch (e) {
+        onResult(false);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _usernameDebounceTimer?.cancel();
+    _emailDebounceTimer?.cancel();
+    super.dispose();
+  }
 }

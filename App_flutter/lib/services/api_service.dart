@@ -42,8 +42,17 @@ class ApiService {
         try {
           final responseBody = utf8.decode(response.bodyBytes);
           final errorData = jsonDecode(responseBody);
+          
+          // 중복 사용자 이름 오류 처리
+          if (response.statusCode == 500 && responseBody.contains('Duplicate entry') && responseBody.contains('username')) {
+            throw Exception('이미 사용 중인 사용자 이름입니다.');
+          }
+          
           throw Exception(errorData['message'] ?? '회원가입에 실패했습니다.');
         } catch (e) {
+          if (e is Exception) {
+            throw e;
+          }
           throw Exception('회원가입 실패: ${response.statusCode}');
         }
       }
@@ -114,6 +123,35 @@ class ApiService {
         'success': false,
         'message': '서버 연결에 실패했습니다.'
       };
+    }
+  }
+
+  Future<bool> checkUsernameAvailability(String username) async {
+    try {
+      print('사용자 이름 중복 검사 요청: $baseUrl/api/auth/check-username');
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/auth/check-username'),
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+        body: jsonEncode({
+          'username': username,
+        }),
+      );
+
+      print('사용자 이름 중복 검사 응답 상태 코드: ${response.statusCode}');
+      print('사용자 이름 중복 검사 응답 내용: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final responseBody = utf8.decode(response.bodyBytes);
+        final responseData = jsonDecode(responseBody);
+        return responseData['available'] ?? false;
+      } else {
+        throw Exception('사용자 이름 중복 검사에 실패했습니다.');
+      }
+    } catch (e) {
+      print('사용자 이름 중복 검사 오류: $e');
+      throw e;
     }
   }
 } 

@@ -16,6 +16,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
   bool _isLoading = false;
+  String? _errorMessage;
+  String? _emailError;
+  String? _passwordError;
 
   @override
   void initState() {
@@ -105,6 +108,72 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: MediaQuery.of(context).size.width * 0.4,
                 height: MediaQuery.of(context).size.width * 0.4,
               ),
+              if (_emailError != null)
+                Container(
+                  padding: EdgeInsets.all(8),
+                  margin: EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[100],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.email, color: Colors.orange[800]),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _emailError!,
+                          style: TextStyle(color: Colors.orange[800]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (_passwordError != null)
+                Container(
+                  padding: EdgeInsets.all(8),
+                  margin: EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.red[100],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.lock, color: Colors.red[800]),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _passwordError!,
+                          style: TextStyle(color: Colors.red[800]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (_errorMessage != null && _emailError == null && _passwordError == null)
+                Container(
+                  padding: EdgeInsets.all(8),
+                  margin: EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.red[100],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.error_outline, color: Colors.red[800]),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _errorMessage!,
+                          style: TextStyle(color: Colors.red[800]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               SizedBox(height: MediaQuery.of(context).size.height * 0.02),
               // 이메일 입력
               TextField(
@@ -113,6 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   labelText: localizations.translate('email'),
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.email),
+                  errorText: _emailError,
                 ),
                 style: TextStyle(
                   fontSize: MediaQuery.of(context).size.width * 0.04,
@@ -127,6 +197,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   labelText: localizations.translate('password'),
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.lock),
+                  errorText: _passwordError,
                 ),
                 style: TextStyle(
                   fontSize: MediaQuery.of(context).size.width * 0.04,
@@ -195,12 +266,23 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     final localizations = AppLocalizations.of(context);
 
+    setState(() {
+      _errorMessage = null;
+      _emailError = null;
+      _passwordError = null;
+    });
+
+    if (_emailController.text.isEmpty) {
+      setState(() {
+        _emailError = localizations.translate('email_required');
+      });
+    }
+    if (_passwordController.text.isEmpty) {
+      setState(() {
+        _passwordError = localizations.translate('password_required');
+      });
+    }
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(localizations.translate('enter_email_password')),
-        ),
-      );
       return;
     }
 
@@ -215,13 +297,34 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       Navigator.pushReplacementNamed(context, '/main');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${localizations.translate('login_failed')}: ${e.toString()}',
-          ),
-        ),
-      );
+      String errorMessage = e.toString();
+      
+      // 서버에서 반환한 에러 메시지 파싱
+      if (errorMessage.contains('"email":')) {
+        setState(() {
+          _emailError = errorMessage.split('"email":')[1].split('"')[1];
+          _passwordError = null;
+          _errorMessage = null;
+        });
+      } else if (errorMessage.contains('"password":')) {
+        setState(() {
+          _passwordError = errorMessage.split('"password":')[1].split('"')[1];
+          _emailError = null;
+          _errorMessage = null;
+        });
+      } else if (errorMessage.contains('"error":')) {
+        setState(() {
+          _errorMessage = errorMessage.split('"error":')[1].split('"')[1];
+          _emailError = null;
+          _passwordError = null;
+        });
+      } else {
+        setState(() {
+          _errorMessage = localizations.translate('login_failed');
+          _emailError = null;
+          _passwordError = null;
+        });
+      }
     } finally {
       setState(() {
         _isLoading = false;
@@ -234,6 +337,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
     try {
@@ -241,20 +345,14 @@ class _LoginScreenState extends State<LoginScreen> {
       if (success) {
         Navigator.pushReplacementNamed(context, '/main');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(localizations.translate('google_login_canceled')),
-          ),
-        );
+        setState(() {
+          _errorMessage = localizations.translate('google_login_canceled');
+        });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${localizations.translate('google_login_failed')}: ${e.toString()}',
-          ),
-        ),
-      );
+      setState(() {
+        _errorMessage = '${localizations.translate('google_login_failed')}: ${e.toString()}';
+      });
     } finally {
       setState(() {
         _isLoading = false;
@@ -267,6 +365,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
     try {
@@ -275,20 +374,14 @@ class _LoginScreenState extends State<LoginScreen> {
       if (success) {
         Navigator.pushReplacementNamed(context, '/main');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(localizations.translate('kakao_login_canceled')),
-          ),
-        );
+        setState(() {
+          _errorMessage = localizations.translate('kakao_login_canceled');
+        });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '${localizations.translate('kakao_login_failed')}: ${e.toString()}',
-          ),
-        ),
-      );
+      setState(() {
+        _errorMessage = '${localizations.translate('kakao_login_failed')}: ${e.toString()}';
+      });
     } finally {
       setState(() {
         _isLoading = false;
