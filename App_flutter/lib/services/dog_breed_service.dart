@@ -59,15 +59,28 @@ class DogBreedService {
 
   Future<List<DogBreed>> analyzeImage(File image) async {
     try {
-      var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/classify'));
+      print('=== 이미지 분석 API 요청 ===');
+      print('요청 URL: $baseUrl/api/analyze');
+      
+      var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/analyze'));
       var stream = http.ByteStream(DelegatingStream.typed(image.openRead()));
       var length = await image.length();
       var multipartFile = http.MultipartFile('image', stream, length, filename: basename(image.path));
       request.files.add(multipartFile);
 
+      print('이미지 파일 정보:');
+      print('- 파일명: ${basename(image.path)}');
+      print('- 파일 크기: $length bytes');
+
       var response = await _httpClient.send(request);
+      print('=== 이미지 분석 API 응답 ===');
+      print('상태 코드: ${response.statusCode}');
+      print('응답 헤더: ${response.headers}');
+
       if (response.statusCode == 200) {
         var responseData = await response.stream.bytesToString();
+        print('응답 내용: $responseData');
+        
         var result = json.decode(responseData);
         List<dynamic> predictions = result['predictions'];
 
@@ -76,6 +89,11 @@ class DogBreedService {
           String englishBreedName = prediction['class'];
           String koreanBreedName = _convertBreedNameToKorean(englishBreedName);
           double confidence = prediction['confidence'];
+
+          print('예측 결과:');
+          print('- 견종(영문): $englishBreedName');
+          print('- 견종(한글): $koreanBreedName');
+          print('- 신뢰도: $confidence%');
 
           // 캐시된 견종 정보 확인
           if (_breedCache.containsKey(koreanBreedName)) {
