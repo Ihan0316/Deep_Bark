@@ -423,6 +423,12 @@ class AuthService extends ChangeNotifier {
 
   Future<bool> deleteAccount() async {
     try {
+      // 서버에서 사용자 정보 삭제
+      if (_userId != '0') {
+        await _apiService.deleteUser(_userId);
+      }
+
+      // 소셜 로그인 연결 해제
       if (isGoogleLogin()) {
         if (await _googleSignIn.isSignedIn()) {
           await _googleSignIn.disconnect();
@@ -435,6 +441,7 @@ class AuthService extends ChangeNotifier {
         }
       }
 
+      // 로컬 상태 초기화
       _isLoggedIn = false;
       _userId = '0';
       _userEmail = '';

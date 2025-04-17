@@ -154,4 +154,25 @@ class ApiService {
       throw e;
     }
   }
+
+  Future<bool> deleteUser(String userId) async {
+    try {
+      final url = Uri.parse('$baseUrl/api/users/$userId');
+      final response = await http.delete(
+        url,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        throw Exception('사용자 삭제 실패: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('사용자 삭제 요청 중 오류 발생: $e');
+      rethrow;
+    }
+  }
 } 
