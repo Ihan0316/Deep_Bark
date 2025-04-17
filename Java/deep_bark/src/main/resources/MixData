@@ -1,0 +1,14 @@
+INSERT INTO dog_mix_breeds (id, breed1, breed2, name_en, name_ko) VALUES
+(1, 'Maltese dog', 'Poodle', 'Maltipoo', '말티푸'),
+(2, 'Yorkshire Terrier', 'Poodle', 'Yorkipoo', '요키푸'),
+(3, 'Cavalier King Charles Spaniel', 'Bichon Frise', 'Cavachon', '카바숑'),
+(4, 'Border Collie', 'Pembroke Welsh Corgi', 'Border Corgi', '보더코기'),
+(5, 'Poodle', 'Bichon Frise', 'Poochon', '푸숑'),
+(6, 'Cocker Spaniel', 'Poodle', 'Cockapoo', '코카푸'),
+(7, 'Maltese dog', 'Shih Tzu', 'Malshi', '말티츄'),
+(8, 'Chihuahua (dog breed)', 'Dachshund', 'Chiweenie', '치위니'),
+(9, 'Maltese dog', 'Yorkshire Terrier', 'Morkie', '몰키'),
+(10, 'Pomeranian dog', 'Siberian Husky', 'Pomsky', '폼스키'),
+(11, 'Golden Retriever', 'Poodle', 'Golden Doodle', '골든두들'),
+(12, 'Cavalier King Charles Spaniel', 'Poodle', 'Cavoodle', '카바푸'),
+(13, 'Jindo Dog', 'Pembroke Welsh Corgi', 'Jindo Corgi', '진도코기');

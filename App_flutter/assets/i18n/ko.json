@@ -59,5 +59,7 @@
   "load_info_failed": "정보를 불러오는데 실패했습니다",
   "confirm_password": "비밀번호 확인",
   "already_have_account": "이미 계정이 있으신가요? 로그인",
-  "dog_scan": "멍멍스캔"
+  "dog_scan": "멍멍스캔",
+  "purebred": "순종",
+  "mixed": "믹스"
 }

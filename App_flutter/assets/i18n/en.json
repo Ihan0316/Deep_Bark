@@ -59,6 +59,8 @@
   "view_more_on_wikipedia": "View more on Wikipedia",
   "load_info_failed": "Failed to load information",
   "confirm_password": "Confirm Password",
-  "already_have_account": "Already have an account? Login"
+  "already_have_account": "Already have an account? Login",
+  "purebred": "purebred",
+  "mixed": "mixed"
 }
 

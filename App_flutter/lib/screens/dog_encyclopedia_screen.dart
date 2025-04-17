@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:ui' as ui;
+import 'dart:async';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../services/dog_breed_service.dart';
 import '../models/dog_breed_model.dart' as models;
@@ -10,6 +12,7 @@ import '../services/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../services/locale_provider.dart';
 import 'package:google_maps_custom_marker/google_maps_custom_marker.dart';
+import 'dart:math';
 
 class DogEncyclopediaScreen extends StatefulWidget {
   @override
@@ -25,10 +28,14 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
   final TextEditingController _searchController = TextEditingController();
   late TabController _tabController;
   late LocaleProvider _localeProvider;
-
+  
+  // 확장된 마커 상태 관리
+  String? _expandedMarkerId;
+  Set<Marker> _expandedMarkers = {};
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
   bool _isMapReady = false;
+  Set<Polyline> _connectionLines = {};
 
   String _cleanBreedName(String name) {
     return name.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
@@ -183,17 +190,167 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
 
   Future<void> _setupMarkers() async {
     _markers = Set<Marker>();
+    _connectionLines.clear();
+    
+    // 국가별로 견종들을 그룹화
+    Map<String, List<models.DogBreed>> breedsByCountry = {};
     for (var breed in _filteredBreeds.where((breed) => breed.originLatLng != null)) {
-      Marker pawMarker = await GoogleMapsCustomMarker.createCustomMarker(
-        marker: Marker(
-          markerId: MarkerId(breed.id.toString()),
-          position: LatLng(
-              breed.originLatLng!.latitude,
-              breed.originLatLng!.longitude
+      String countryKey = '${breed.originLatLng!.latitude},${breed.originLatLng!.longitude}';
+      if (!breedsByCountry.containsKey(countryKey)) {
+        breedsByCountry[countryKey] = [];
+      }
+      breedsByCountry[countryKey]!.add(breed);
+    }
+
+    // 각 국가별로 마커 생성
+    for (var entry in breedsByCountry.entries) {
+      var breeds = entry.value;
+      var coordinates = entry.key.split(',');
+      var position = LatLng(
+        double.parse(coordinates[0]),
+        double.parse(coordinates[1])
+      );
+
+      _markers.add(
+        Marker(
+          markerId: MarkerId(entry.key),
+          position: position,
+          icon: await _createStackedMarker(breeds),
+          onTap: () => _handleMarkerTap(entry.key, breeds, position),
+          zIndex: 2,
+        ),
+      );
+    }
+  }
+
+  Future<BitmapDescriptor> _createStackedMarker(List<models.DogBreed> breeds) async {
+    final int size = 100;
+    final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(pictureRecorder);
+    
+    // 흰색 원형 배경
+    canvas.drawCircle(
+      Offset(size/2, size/2),
+      size/2,
+      Paint()..color = Colors.white,
+    );
+    
+    // 대표 이미지 (첫 번째 견종) 로드
+    final imageProvider = AssetImage(breeds.first.imageUrl!);
+    final ImageStream stream = imageProvider.resolve(ImageConfiguration());
+    final Completer<void> completer = Completer<void>();
+    late ImageInfo imageInfo;
+    
+    stream.addListener(ImageStreamListener((info, _) {
+      imageInfo = info;
+      completer.complete();
+    }));
+    
+    await completer.future;
+    
+    // 이미지를 원형으로 클립
+    canvas.clipPath(Path()
+      ..addOval(Rect.fromCircle(
+        center: Offset(size/2, size/2),
+        radius: size/2,
+      )));
+    
+    // 이미지 그리기
+    canvas.drawImageRect(
+      imageInfo.image,
+      Rect.fromLTWH(0, 0, imageInfo.image.width.toDouble(), imageInfo.image.height.toDouble()),
+      Rect.fromLTWH(0, 0, size.toDouble(), size.toDouble()),
+      Paint(),
+    );
+    
+    // 갈색 테두리
+    canvas.drawCircle(
+      Offset(size/2, size/2),
+      size/2,
+      Paint()
+        ..color = Colors.brown
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3,
+    );
+    
+    // 견종 수 표시
+    if (breeds.length > 1) {
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: '+${breeds.length - 1}',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            shadows: [
+              Shadow(
+                offset: Offset(2.0, 2.0),
+                blurRadius: 3.0,
+                color: Colors.brown,
+              ),
+            ],
           ),
-          infoWindow: InfoWindow(
-            title: _cleanBreedName(_localeProvider.locale.languageCode == 'ko' ? breed.nameKo : breed.nameEn),
-            snippet: _localeProvider.locale.languageCode == 'ko' ? breed.originKo : breed.originEn,
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(size - textPainter.width - 10, size - textPainter.height - 10),
+      );
+    }
+    
+    final img = await pictureRecorder.endRecording().toImage(size, size);
+    final data = await img.toByteData(format: ui.ImageByteFormat.png);
+    
+    return BitmapDescriptor.fromBytes(data!.buffer.asUint8List());
+  }
+
+  void _handleMarkerTap(String markerId, List<models.DogBreed> breeds, LatLng position) async {
+    if (_expandedMarkerId == markerId) {
+      // 이미 확장된 마커를 다시 탭하면 상세 정보 표시
+      _showBreedBottomSheet(context, breeds);
+      return;
+    }
+
+    setState(() {
+      _expandedMarkerId = markerId;
+      _expandedMarkers.clear();
+      _connectionLines.clear();
+    });
+
+    // 최대 7개까지 표시
+    final displayBreeds = breeds.take(7).toList();
+    final double radius = 0.003; // 약 300m
+    final int count = displayBreeds.length;
+    
+    // 부채꼴의 시작 각도와 끝 각도 설정 (120도 범위로 확장)
+    final double startAngle = -60.0; // 시작 각도
+    final double totalSpread = 120.0; // 전체 펼침 각도
+
+    List<LatLng> markerPositions = [];
+    markerPositions.add(position); // 중앙 마커 위치 추가
+
+    for (int i = 0; i < count; i++) {
+      final breed = displayBreeds[i];
+      // 부채꼴 내에서 균등하게 각도 분배
+      final double angle = startAngle + (totalSpread / (count - 1)) * i;
+      final double angleInRadians = angle * (pi / 180);
+      
+      // 위도/경도 계산
+      final double lat = position.latitude + (radius * cos(angleInRadians));
+      final double lng = position.longitude + (radius * sin(angleInRadians));
+      final LatLng markerPosition = LatLng(lat, lng);
+      markerPositions.add(markerPosition);
+
+      final markerIcon = await _createBreedMarker(breed);
+      
+      setState(() {
+        _expandedMarkers.add(
+          Marker(
+            markerId: MarkerId('${markerId}_expanded_$i'),
+            position: markerPosition,
+            icon: markerIcon,
             onTap: () {
               Navigator.pushNamed(
                 context,
@@ -201,15 +358,178 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
                 arguments: {'breed': breed},
               );
             },
+            zIndex: 2, // 선보다 위에 표시
           ),
-        ),
-        shape: MarkerShape.circle,
-        backgroundColor: Colors.white,
-        title: '🐾',
-        textStyle: TextStyle(fontSize: 15, color: Colors.brown)
-      );
-      _markers.add(pawMarker);
+        );
+
+        // 중앙 마커와 현재 마커를 연결하는 선 추가
+        _connectionLines.add(
+          Polyline(
+            polylineId: PolylineId('connection_$i'),
+            points: [position, markerPosition],
+            color: Colors.brown.withOpacity(0.6),
+            width: 2,
+            patterns: [
+              PatternItem.dash(10), // 점선 효과
+              PatternItem.gap(5),
+            ],
+            zIndex: 1, // 마커보다 아래에 표시
+          ),
+        );
+      });
     }
+
+    // 지도 중심 이동 및 줌 레벨 조정
+    _mapController?.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: position,
+          zoom: 15.0,
+        ),
+      ),
+    );
+  }
+
+  Future<BitmapDescriptor> _createBreedMarker(models.DogBreed breed) async {
+    final int size = 80;
+    final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(pictureRecorder);
+    
+    // 흰색 원형 배경
+    canvas.drawCircle(
+      Offset(size/2, size/2),
+      size/2,
+      Paint()..color = Colors.white,
+    );
+    
+    // 이미지 로드
+    final imageProvider = AssetImage(breed.imageUrl!);
+    final ImageStream stream = imageProvider.resolve(ImageConfiguration());
+    final Completer<void> completer = Completer<void>();
+    late ImageInfo imageInfo;
+    
+    stream.addListener(ImageStreamListener((info, _) {
+      imageInfo = info;
+      completer.complete();
+    }));
+    
+    await completer.future;
+    
+    // 이미지를 원형으로 클립
+    canvas.clipPath(Path()
+      ..addOval(Rect.fromCircle(
+        center: Offset(size/2, size/2),
+        radius: size/2,
+      )));
+    
+    // 이미지 그리기
+    canvas.drawImageRect(
+      imageInfo.image,
+      Rect.fromLTWH(0, 0, imageInfo.image.width.toDouble(), imageInfo.image.height.toDouble()),
+      Rect.fromLTWH(0, 0, size.toDouble(), size.toDouble()),
+      Paint(),
+    );
+    
+    // 갈색 테두리
+    canvas.drawCircle(
+      Offset(size/2, size/2),
+      size/2,
+      Paint()
+        ..color = Colors.brown
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3,
+    );
+    
+    final img = await pictureRecorder.endRecording().toImage(size, size);
+    final data = await img.toByteData(format: ui.ImageByteFormat.png);
+    
+    return BitmapDescriptor.fromBytes(data!.buffer.asUint8List());
+  }
+
+  void _showBreedBottomSheet(BuildContext context, List<models.DogBreed> breeds) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.4,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              height: 4,
+              width: 40,
+              margin: EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Text(
+              _localeProvider.locale.languageCode == 'ko' 
+                ? breeds.first.originKo 
+                : breeds.first.originEn,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.all(16),
+                itemCount: breeds.length,
+                itemBuilder: (context, index) {
+                  final breed = breeds[index];
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(
+                        context,
+                        '/breed_detail',
+                        arguments: {'breed': breed},
+                      );
+                    },
+                    child: Container(
+                      width: 120,
+                      margin: EdgeInsets.only(right: 16),
+                      child: Column(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(60),
+                            child: Image.asset(
+                              breed.imageUrl!,
+                              width: 120,
+                              height: 120,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            _cleanBreedName(_localeProvider.locale.languageCode == 'ko' 
+                              ? breed.nameKo 
+                              : breed.nameEn),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _filterBreeds(String query) {
@@ -335,7 +655,8 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
                     target: LatLng(30, 0),
                     zoom: 2,
                   ),
-                  markers: _markers,
+                  markers: {..._markers, ..._expandedMarkers},
+                  polylines: _connectionLines,
                   onMapCreated: (controller) {
                     _mapController = controller;
                     // 지도 스타일 최적화
@@ -371,6 +692,16 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
                   zoomControlsEnabled: true,
                   mapToolbarEnabled: false,
                   minMaxZoomPreference: MinMaxZoomPreference(1, 18),
+                  onTap: (_) {
+                    // 지도를 탭하면 확장된 마커들과 선들 닫기
+                    if (_expandedMarkerId != null) {
+                      setState(() {
+                        _expandedMarkerId = null;
+                        _expandedMarkers.clear();
+                        _connectionLines.clear();
+                      });
+                    }
+                  },
                 ),
               ],
             ),
@@ -402,4 +733,7 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
     };
     return countryNameMap[countryName];
   }
+
+  // dart:math의 pi 상수를 사용하기 위한 상수 정의
+  static const double pi = 3.1415926535897932;
 }

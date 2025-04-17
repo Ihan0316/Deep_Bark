@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 import '../models/dog_breed_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' show json, utf8;
@@ -209,6 +210,16 @@ class DogBreedService {
 
       if (response.statusCode == 200) {
         List<dynamic> jsonList = json.decode(utf8.decode(response.bodyBytes));
+        print('=== 견종 데이터 로드 ===');
+        print('총 견종 수: ${jsonList.length}');
+        jsonList.forEach((json) {
+          print('견종 정보:');
+          print('- ID: ${json['id']}');
+          print('- 한글명: ${json['nameKo']}');
+          print('- 영문명: ${json['nameEn']}');
+          print('- 설명: ${json['descriptionKo']?.substring(0, min(50, json['descriptionKo']?.length ?? 0))}...');
+        });
+        
         return jsonList.map((json) {
           String nameKo = json['nameKo'];
           return DogBreed(
@@ -374,6 +385,27 @@ class DogBreedService {
     } catch (e) {
       print('서버 연결 확인 실패: $e');
       return false;
+    }
+  }
+
+  Future<Map<String, String>?> findMixDog(String breed1, String breed2) async {
+    try {
+      final response = await _httpClient.get(
+        Uri.parse('$baseUrl/api/mix-dogs/find?breed1=$breed1&breed2=$breed2'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(utf8.decode(response.bodyBytes));
+        return {
+          'nameEn': data['nameEn'],
+          'nameKo': data['nameKo'],
+        };
+      }
+      return null;
+    } catch (e) {
+      print('믹스견 조회 에러: $e');
+      return null;
     }
   }
 
