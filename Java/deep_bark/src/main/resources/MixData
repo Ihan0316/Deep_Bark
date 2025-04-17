@@ -1,4 +1,4 @@
-INSERT INTO dog_mix_breeds (id, breed1, breed2, name_en, name_ko) VALUES
+INSERT INTO mix_dogs (id, breed1, breed2, name_en, name_ko) VALUES
 (1, 'Maltese dog', 'Poodle', 'Maltipoo', '말티푸'),
 (2, 'Yorkshire Terrier', 'Poodle', 'Yorkipoo', '요키푸'),
 (3, 'Cavalier King Charles Spaniel', 'Bichon Frise', 'Cavachon', '카바숑'),
