@@ -59,4 +59,21 @@ public class UserController {
             return ResponseEntity.badRequest().body(error);
         }
     }
+
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
+        try {
+            logger.info("Deleting user with ID: {}", userId);
+            userService.deleteUser(userId);
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "사용자가 성공적으로 삭제되었습니다.");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error deleting user with ID {}: {}", userId, e.getMessage(), e);
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "사용자 삭제 중 오류가 발생했습니다.");
+            error.put("details", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
 }

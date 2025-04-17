@@ -4,6 +4,7 @@ import com.deepbark.entity.User;
 import com.deepbark.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserService {
@@ -20,5 +21,10 @@ public class UserService {
 
     public boolean isEmailAvailable(String email) {
         return !userRepository.existsByEmail(email);
+    }
+
+    @Transactional
+    public void deleteUser(Long userId) {
+        userRepository.deleteById(userId);
     }
 }
