@@ -30,31 +30,13 @@ class ApiService {
       print('회원가입 응답 헤더: ${response.headers}');
       print('회원가입 응답 내용: ${response.body}');
 
+      final responseBody = utf8.decode(response.bodyBytes);
+      final responseData = jsonDecode(responseBody);
+
       if (response.statusCode == 200) {
-        try {
-          final responseBody = utf8.decode(response.bodyBytes);
-          return jsonDecode(responseBody);
-        } catch (e) {
-          print('JSON 디코딩 오류: $e');
-          return {'success': true, 'message': response.body};
-        }
+        return responseData;
       } else {
-        try {
-          final responseBody = utf8.decode(response.bodyBytes);
-          final errorData = jsonDecode(responseBody);
-          
-          // 중복 사용자 이름 오류 처리
-          if (response.statusCode == 500 && responseBody.contains('Duplicate entry') && responseBody.contains('username')) {
-            throw Exception('이미 사용 중인 사용자 이름입니다.');
-          }
-          
-          throw Exception(errorData['message'] ?? '회원가입에 실패했습니다.');
-        } catch (e) {
-          if (e is Exception) {
-            throw e;
-          }
-          throw Exception('회원가입 실패: ${response.statusCode}');
-        }
+        throw Exception(responseData['error'] ?? '회원가입에 실패했습니다.');
       }
     } catch (e) {
       print('회원가입 요청 중 오류 발생: $e');

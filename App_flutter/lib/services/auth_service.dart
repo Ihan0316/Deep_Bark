@@ -136,13 +136,15 @@ class AuthService extends ChangeNotifier {
       final result = await _apiService.registerUser(email, password, username, username);  // username을 name으로도 사용
       
       if (result['success'] == true) {
-        // 회원가입 성공 시 자동 로그인하지 않고 true 반환
+        print('회원가입 성공: ${result['message']}');
         return true;
+      } else {
+        print('회원가입 실패: ${result['error']}');
+        throw Exception(result['error'] ?? '회원가입에 실패했습니다.');
       }
-      return false;
     } catch (e) {
       print('회원가입 오류: $e');
-      return false;
+      rethrow;
     }
   }
 
