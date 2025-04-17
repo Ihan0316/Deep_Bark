@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 public class UserService {
     private final UserRepository userRepository;
@@ -26,5 +28,14 @@ public class UserService {
     @Transactional
     public void deleteUser(Long userId) {
         userRepository.deleteById(userId);
+    }
+
+    public User getUserById(Long userId) {
+        Optional<User> user = userRepository.findById(userId);
+        return user.orElse(null);
+    }
+
+    public void updateUser(User user) {
+        userRepository.save(user);
     }
 }
