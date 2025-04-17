@@ -34,6 +34,7 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
   Set<Marker> _markers = {};
   bool _isMapReady = false;
   Set<Polyline> _connectionLines = {};
+  double _initialZoom = 2.0; // 초기 줌 레벨 저장
 
   String _cleanBreedName(String name) {
     return name.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
@@ -305,9 +306,16 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
   }
 
   void _handleMarkerTap(String markerId, List<models.DogBreed> breeds, LatLng position) async {
+    // 하단 시트 표시
+    _showBreedBottomSheet(context, breeds);
+
     if (_expandedMarkerId == markerId) {
-      // 이미 확장된 마커를 다시 탭하면 상세 정보 표시
-      _showBreedBottomSheet(context, breeds);
+      // 이미 확장된 마커를 다시 탭하면 확장 상태 해제
+      setState(() {
+        _expandedMarkerId = null;
+        _expandedMarkers.clear();
+        _connectionLines.clear();
+      });
       return;
     }
 
@@ -445,11 +453,30 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
   }
 
   void _showBreedBottomSheet(BuildContext context, List<models.DogBreed> breeds) {
+    // 견종 개수에 따른 시트 높이 계산
+    double calculateSheetHeight() {
+      const double headerHeight = 60.0; // 상단 헤더 높이 (드래그 핸들 + 국가명)
+      const double padding = 32.0; // 상하 패딩
+      const double gridSpacing = 16.0; // 그리드 간격
+      
+      if (breeds.length <= 3) {
+        // 가로 스크롤 레이아웃일 때
+        const double cardHeight = 160.0; // 카드 높이 (이미지 120 + 텍스트 40)
+        return headerHeight + padding + cardHeight;
+      } else {
+        // 그리드 레이아웃일 때
+        const double cardHeight = 140.0; // 카드 높이 (이미지 100 + 텍스트 40)
+        int rows = (breeds.length / 3).ceil();
+        return headerHeight + padding + (rows * cardHeight) + ((rows - 1) * gridSpacing);
+      }
+    }
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.4,
+        height: calculateSheetHeight(),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -475,59 +502,121 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
               ),
             ),
             Expanded(
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.all(16),
-                itemCount: breeds.length,
-                itemBuilder: (context, index) {
-                  final breed = breeds[index];
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(
-                        context,
-                        '/breed_detail',
-                        arguments: {'breed': breed},
+              child: breeds.length <= 3
+                ? ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: EdgeInsets.all(16),
+                    itemCount: breeds.length,
+                    itemBuilder: (context, index) {
+                      final breed = breeds[index];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.pushNamed(
+                            context,
+                            '/breed_detail',
+                            arguments: {'breed': breed},
+                          );
+                        },
+                        child: Container(
+                          width: 120,
+                          margin: EdgeInsets.only(right: 16),
+                          child: Column(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(60),
+                                child: Image.asset(
+                                  breed.imageUrl!,
+                                  width: 120,
+                                  height: 120,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                _cleanBreedName(_localeProvider.locale.languageCode == 'ko' 
+                                  ? breed.nameKo 
+                                  : breed.nameEn),
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
                       );
                     },
-                    child: Container(
-                      width: 120,
-                      margin: EdgeInsets.only(right: 16),
-                      child: Column(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(60),
-                            child: Image.asset(
-                              breed.imageUrl!,
-                              width: 120,
-                              height: 120,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            _cleanBreedName(_localeProvider.locale.languageCode == 'ko' 
-                              ? breed.nameKo 
-                              : breed.nameEn),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
+                  )
+                : GridView.builder(
+                    padding: EdgeInsets.all(16),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      childAspectRatio: 0.8,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
                     ),
-                  );
-                },
-              ),
+                    itemCount: breeds.length,
+                    itemBuilder: (context, index) {
+                      final breed = breeds[index];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.pushNamed(
+                            context,
+                            '/breed_detail',
+                            arguments: {'breed': breed},
+                          );
+                        },
+                        child: Column(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(60),
+                              child: Image.asset(
+                                breed.imageUrl!,
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              _cleanBreedName(_localeProvider.locale.languageCode == 'ko' 
+                                ? breed.nameKo 
+                                : breed.nameEn),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
             ),
           ],
         ),
       ),
-    );
+    ).then((_) {
+      // 하단 시트가 닫힐 때 마커의 확장 상태 초기화 및 줌 레벨 복원
+      setState(() {
+        _expandedMarkerId = null;
+        _expandedMarkers.clear();
+        _connectionLines.clear();
+      });
+      
+      // 지도 줌 레벨을 초기값으로 복원
+      _mapController?.animateCamera(
+        CameraUpdate.zoomTo(_initialZoom),
+      );
+    });
   }
 
   void _filterBreeds(String query) {
@@ -651,7 +740,7 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
                     : GoogleMap(
                   initialCameraPosition: CameraPosition(
                     target: LatLng(30, 0),
-                    zoom: 2,
+                    zoom: _initialZoom,
                   ),
                   markers: {..._markers, ..._expandedMarkers},
                   polylines: _connectionLines,
