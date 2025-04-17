@@ -64,6 +64,17 @@
   "mixed": "mixed",
   "confirm_analysis": "Breed Analysis",
   "confirm_analysis_message": "Would you like to analyze the breed with the selected image?",
-  "confirm": "Confirm"
+  "confirm": "Confirm",
+  "forgot_password": "Forgot Password",
+  "enter_registered_email": "Please enter your registered email address",
+  "reset_password": "Reset Password",
+  "reset_password_success": "Your password has been reset to 1234. Please log in and change your password.",
+  "invalid_email_format": "Please enter a valid email format",
+  "change_password": "Change Password",
+  "current_password": "Current Password",
+  "new_password": "New Password",
+  "confirm_new_password": "Confirm New Password",
+  "passwords_do_not_match": "Passwords do not match",
+  "password_changed_successfully": "Password changed successfully"
 }
 

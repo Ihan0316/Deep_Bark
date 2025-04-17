@@ -64,5 +64,16 @@
   "mixed": "믹스",
   "confirm_analysis": "품종 분석",
   "confirm_analysis_message": "선택한 이미지로 품종을 분석하시겠습니까?",
-  "confirm": "확인"
+  "confirm": "확인",
+  "forgot_password": "비밀번호 찾기",
+  "enter_registered_email": "가입하신 이메일 주소를 입력해주세요",
+  "reset_password": "비밀번호 초기화",
+  "reset_password_success": "비밀번호가 1234로 초기화되었습니다. 로그인 후 비밀번호를 변경해주세요.",
+  "invalid_email_format": "올바른 이메일 형식을 입력해주세요",
+  "change_password": "비밀번호 변경",
+  "current_password": "현재 비밀번호",
+  "new_password": "새 비밀번호",
+  "confirm_new_password": "새 비밀번호 확인",
+  "passwords_do_not_match": "비밀번호가 일치하지 않습니다",
+  "password_changed_successfully": "비밀번호가 성공적으로 변경되었습니다"
 }

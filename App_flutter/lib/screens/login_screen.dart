@@ -5,6 +5,7 @@ import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import '../services/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../services/locale_provider.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -256,6 +257,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
               SizedBox(height: MediaQuery.of(context).size.height * 0.05), // 하단 여백 추가
+              const SizedBox(height: 20),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ForgotPasswordScreen(),
+                    ),
+                  );
+                },
+                child: const Text('비밀번호를 잊으셨나요?'),
+              ),
+              const SizedBox(height: 20),
             ],
           ),
         ),

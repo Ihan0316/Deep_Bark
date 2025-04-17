@@ -661,4 +661,44 @@ class AuthService extends ChangeNotifier {
     _emailDebounceTimer?.cancel();
     super.dispose();
   }
+
+  Future<bool> resetPassword(String email) async {
+    try {
+      print('비밀번호 초기화 시작');
+      final result = await _apiService.resetPassword(email);
+      
+      if (result['success'] == true) {
+        print('비밀번호 초기화 성공: ${result['message']}');
+        return true;
+      } else {
+        print('비밀번호 초기화 실패: ${result['error']}');
+        throw Exception(result['error'] ?? '비밀번호 초기화에 실패했습니다.');
+      }
+    } catch (e) {
+      print('비밀번호 초기화 중 오류 발생: $e');
+      rethrow;
+    }
+  }
+
+  Future<bool> changePassword(String currentPassword, String newPassword) async {
+    try {
+      print('비밀번호 변경 시작');
+      if (_userId == '0') {
+        throw Exception('로그인이 필요합니다.');
+      }
+
+      final result = await _apiService.changePassword(_userId, currentPassword, newPassword);
+      
+      if (result['success'] == true) {
+        print('비밀번호 변경 성공: ${result['message']}');
+        return true;
+      } else {
+        print('비밀번호 변경 실패: ${result['error']}');
+        throw Exception(result['error'] ?? '비밀번호 변경에 실패했습니다.');
+      }
+    } catch (e) {
+      print('비밀번호 변경 중 오류 발생: $e');
+      rethrow;
+    }
+  }
 }

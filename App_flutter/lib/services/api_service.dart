@@ -1,11 +1,18 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   // Android 에뮬레이터에서 로컬호스트 접근용
   static const String baseUrl = 'http://10.0.2.2:8080';
   // 실제 기기나 iOS 시뮬레이터에서는 아래 주소 사용
   // static const String baseUrl = 'http://10.100.201.41:8080';
+
+  // 토큰을 가져오는 메서드
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token');
+  }
 
   Future<Map<String, dynamic>> registerUser(String email, String password, String username, String name) async {
     try {
@@ -154,6 +161,75 @@ class ApiService {
       }
     } catch (e) {
       print('사용자 삭제 요청 중 오류 발생: $e');
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> resetPassword(String email) async {
+    try {
+      print('비밀번호 초기화 API 요청 시작');
+      final url = Uri.parse('$baseUrl/api/auth/reset-password');
+      print('요청 URL: $url');
+      
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+        body: jsonEncode({
+          'email': email,
+        }),
+      );
+
+      print('비밀번호 초기화 응답 상태 코드: ${response.statusCode}');
+      print('비밀번호 초기화 응답 내용: ${response.body}');
+
+      final responseBody = utf8.decode(response.bodyBytes);
+      final responseData = jsonDecode(responseBody);
+
+      if (response.statusCode == 200) {
+        return responseData;
+      } else {
+        throw Exception(responseData['error'] ?? '비밀번호 초기화에 실패했습니다.');
+      }
+    } catch (e) {
+      print('비밀번호 초기화 요청 중 오류 발생: $e');
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>> changePassword(String userId, String currentPassword, String newPassword) async {
+    try {
+      print('비밀번호 변경 API 요청 시작');
+      final url = Uri.parse('$baseUrl/api/users/change-password');
+      print('요청 URL: $url');
+      
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Authorization': 'Bearer ${await _getToken()}',
+        },
+        body: jsonEncode({
+          'userId': userId,
+          'currentPassword': currentPassword,
+          'newPassword': newPassword,
+        }),
+      );
+
+      print('비밀번호 변경 응답 상태 코드: ${response.statusCode}');
+      print('비밀번호 변경 응답 내용: ${response.body}');
+
+      final responseBody = utf8.decode(response.bodyBytes);
+      final responseData = jsonDecode(responseBody);
+
+      if (response.statusCode == 200) {
+        return responseData;
+      } else {
+        throw Exception(responseData['error'] ?? '비밀번호 변경에 실패했습니다.');
+      }
+    } catch (e) {
+      print('비밀번호 변경 요청 중 오류 발생: $e');
       rethrow;
     }
   }
