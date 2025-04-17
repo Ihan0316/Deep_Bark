@@ -97,7 +97,7 @@ class ScanResultScreen extends StatelessWidget {
                         );
                       }
 
-                      final validResults = results.where((breed) => (breed.confidence ?? 0) >= 30).toList();
+                      final validResults = results.where((breed) => (breed.confidence ?? 0) >= 20).toList();
                       if (validResults.isEmpty) {
                         return Container(); // 30% 이상인 결과가 없으면 아무것도 출력하지 않음
                       }
@@ -135,7 +135,7 @@ class ScanResultScreen extends StatelessWidget {
 
               SizedBox(height: 32),
 
-              if (results.isEmpty || results.every((breed) => (breed.confidence ?? 0) < 30))
+              if (results.isEmpty || results.every((breed) => (breed.confidence ?? 0) < 20))
                 Card(
                   margin: EdgeInsets.only(bottom: 12),
                   elevation: 3,
@@ -200,7 +200,7 @@ class ScanResultScreen extends StatelessWidget {
 
   List<DogBreed> _getFilteredResults(List<DogBreed> results) {
     // 30% 이상의 결과만 필터링
-    final validResults = results.where((breed) => (breed.confidence ?? 0) >= 30).toList();
+    final validResults = results.where((breed) => (breed.confidence ?? 0) >= 20).toList();
     
     // 정상 결과가 있는 경우 상위 2개 결과만 반환
     if (validResults.isNotEmpty) {
@@ -226,7 +226,7 @@ class ScanResultScreen extends StatelessWidget {
 
   Widget _buildResultItem(BuildContext context, DogBreed breed, int index) {
     final localizations = AppLocalizations.of(context);
-    final bool isError = (breed.confidence ?? 0) < 30;
+    final bool isError = (breed.confidence ?? 0) < 20;
     final localeProvider = Provider.of<LocaleProvider>(context);
 
     // 결과 번호는 1부터 시작하고 2까지만 표시
@@ -379,9 +379,9 @@ class ScanResultScreen extends StatelessWidget {
 
   // 신뢰도에 따른 색상 반환
   Color _getConfidenceColor(double confidence) {
-    if (confidence >= 80) {
+    if (confidence >= 60) {
       return Colors.green;
-    } else if (confidence >= 60) {
+    } else if (confidence >= 30) {
       return Colors.orange;
     } else {
       return Colors.red;

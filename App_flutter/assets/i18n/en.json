@@ -61,6 +61,9 @@
   "confirm_password": "Confirm Password",
   "already_have_account": "Already have an account? Login",
   "purebred": "purebred",
-  "mixed": "mixed"
+  "mixed": "mixed",
+  "confirm_analysis": "Breed Analysis",
+  "confirm_analysis_message": "Would you like to analyze the breed with the selected image?",
+  "confirm": "Confirm"
 }
 

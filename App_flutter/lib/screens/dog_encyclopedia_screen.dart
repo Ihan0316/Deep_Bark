@@ -7,11 +7,9 @@ import 'dart:async';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../services/dog_breed_service.dart';
 import '../models/dog_breed_model.dart' as models;
-import 'package:geocoding/geocoding.dart';
 import '../services/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../services/locale_provider.dart';
-import 'package:google_maps_custom_marker/google_maps_custom_marker.dart';
 import 'dart:math';
 
 class DogEncyclopediaScreen extends StatefulWidget {
@@ -384,7 +382,7 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
       CameraUpdate.newCameraPosition(
         CameraPosition(
           target: position,
-          zoom: 15.0,
+          zoom: 5.0,
         ),
       ),
     );

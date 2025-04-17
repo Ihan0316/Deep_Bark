@@ -61,5 +61,8 @@
   "already_have_account": "이미 계정이 있으신가요? 로그인",
   "dog_scan": "멍멍스캔",
   "purebred": "순종",
-  "mixed": "믹스"
+  "mixed": "믹스",
+  "confirm_analysis": "품종 분석",
+  "confirm_analysis_message": "선택한 이미지로 품종을 분석하시겠습니까?",
+  "confirm": "확인"
 }
