@@ -15,7 +15,7 @@ class DogBreedService {
   DogBreedService._internal();
 
   final http.Client _httpClient = http.Client();
-  final String baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8080';
+  // final String baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8080';
   final Map<String, String> _contentCache = {};
   final Map<String, String?> _imageUrlCache = {};
   final Map<String, DogBreed> _breedCache = {};
@@ -23,9 +23,14 @@ class DogBreedService {
 
   final ImageCacheService _imageCache = ImageCacheService();
 
-  // Flask 서버 URL (실제 서버 주소로 변경 필요)
-  // 실제 기기나 iOS 시뮬레이터에서는 실제 IP 주소 사용 필요
-  // final String baseUrl = 'http://10.100.201.41:5000';
+  // 플랫폼에 따른 baseUrl 설정
+  String get baseUrl {
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8080';
+    } else {
+      return 'http://10.100.201.41:8080';
+    }
+  }
 
   Future<List<DogBreed>> analyzeImage(File imageFile) async {
     try {
