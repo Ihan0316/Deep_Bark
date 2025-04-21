@@ -15,7 +15,6 @@ class DogBreedService {
   DogBreedService._internal();
 
   final http.Client _httpClient = http.Client();
-  // final String baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://10.0.2.2:8080';
   final Map<String, String> _contentCache = {};
   final Map<String, String?> _imageUrlCache = {};
   final Map<String, DogBreed> _breedCache = {};
