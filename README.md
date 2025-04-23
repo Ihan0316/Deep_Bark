@@ -20,7 +20,7 @@
 | -------- | ----------------------------------- |
 | Frontend | Flutter                             |
 | Backend  | Spring Boot                         |
-| AI       | Python, TensorFlow, EfficientNet B4 |
+| AI       | Python, Pytorch, EfficientNet B4 |
 | Database | MariaDB                             |
 | API      | RESTful                             |
 
@@ -69,20 +69,17 @@
 cd App_flutter
 flutter pub get
 flutter run
-text
 
 ### 2. Spring Boot 백엔드 실행
 
 cd Java/deep_bark
 ./gradlew bootRun
-text
 
 ### 3. Python AI 모델 실행
 
 cd Python/FlaskProject-Deep-Bark
 pip install -r requirements.txt
-python app.py
-text
+flask run --host=0.0.0.0 --port=5000
 
 > **참고:**
 >
