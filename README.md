@@ -78,7 +78,6 @@ cd Java/deep_bark
 ### 3. Python AI 모델 실행
 
 cd Python/FlaskProject-Deep-Bark
-pip install -r requirements.txt
 flask run --host=0.0.0.0 --port=5000
 
 > **참고:**
