@@ -55,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 title: Text('한국어'),
                 trailing:
                     localeProvider.locale.languageCode == 'ko'
-                        ? Icon(Icons.check, color: Colors.brown)
+                        ? Icon(Icons.check, color: Colors.blueGrey)
                         : null,
                 onTap: () {
                   localeProvider.setLocale('ko');
@@ -66,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 title: Text('English'),
                 trailing:
                     localeProvider.locale.languageCode == 'en'
-                        ? Icon(Icons.check, color: Colors.brown)
+                        ? Icon(Icons.check, color: Colors.blueGrey)
                         : null,
                 onTap: () {
                   localeProvider.setLocale('en');
@@ -91,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(Icons.language, color: Colors.brown),
+            icon: Icon(Icons.language, color: Colors.blueGrey),
             onPressed: () => _showLanguageSelector(context),
             tooltip: localizations.translate('language_settings'),
           ),
@@ -213,7 +213,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: _login,
                       child: Text(localizations.translate('login')),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.brown,
+                        backgroundColor: Colors.blueGrey,
                         minimumSize: Size(double.infinity, 50),
                       ),
                     ),

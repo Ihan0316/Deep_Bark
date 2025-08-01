@@ -79,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         automaticallyImplyLeading: false,  // 뒤로가기 버튼 비활성화
         title: Text(localizations.translate('app_title')),
-        backgroundColor: Colors.brown,
+        backgroundColor: Colors.blueGrey,
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -131,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: Icon(Icons.camera_alt),
                     label: Text(localizations.translate('camera')),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.brown,
+                      backgroundColor: Colors.blueGrey,
                       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     ),
                   ),
@@ -141,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     icon: Icon(Icons.photo_library),
                     label: Text(localizations.translate('gallery')),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.brown,
+                      backgroundColor: Colors.blueGrey,
                       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                     ),
                   ),
@@ -155,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       onPressed: _image == null ? null : _analyzeImage,
                       child: Text(localizations.translate('analyze')),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.brown,
+                        backgroundColor: Colors.blueGrey,
                         minimumSize: Size(double.infinity, 50),
                         disabledBackgroundColor: Colors.grey,
                       ),

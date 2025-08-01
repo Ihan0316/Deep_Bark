@@ -65,17 +65,17 @@ class MyApp extends StatelessWidget {
           navigatorKey: navigatorKey,
           title: '멍멍스캔',
           theme: ThemeData(
-            primarySwatch: Colors.brown,
+            primarySwatch: Colors.blueGrey,
             fontFamily: 'NotoSansKR',
             visualDensity: VisualDensity.adaptivePlatformDensity,
             appBarTheme: AppBarTheme(
-              backgroundColor: Colors.brown,
+              backgroundColor: Colors.blueGrey,
               foregroundColor: Colors.white,
               elevation: 0,
             ),
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.brown,
+                backgroundColor: Colors.blueGrey,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -92,7 +92,7 @@ class MyApp extends StatelessWidget {
               thumbVisibility: MaterialStateProperty.all(true),
               thickness: MaterialStateProperty.all(6.0),
               radius: Radius.circular(3.0),
-              thumbColor: MaterialStateProperty.all(Colors.brown.withOpacity(0.5)),
+              thumbColor: MaterialStateProperty.all(Colors.blueGrey.withOpacity(0.5)),
             ),
           ),
           locale: localeProvider.locale,  // 현재 로케일 설정

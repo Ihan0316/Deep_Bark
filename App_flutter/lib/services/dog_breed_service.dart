@@ -27,7 +27,7 @@ class DogBreedService {
     if (Platform.isAndroid) {
       return 'http://10.0.2.2:8080';
     } else {
-      return 'http://10.100.201.41:8080';
+      return 'http://192.168.0.110:8080';
     }
   }
 

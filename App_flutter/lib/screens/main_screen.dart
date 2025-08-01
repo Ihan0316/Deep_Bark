@@ -74,7 +74,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
         ),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,
-          selectedItemColor: Colors.brown,
+          selectedItemColor: Colors.blueGrey,
           onTap: _onItemTapped,
           items: [
             BottomNavigationBarItem(

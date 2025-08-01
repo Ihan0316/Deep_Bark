@@ -295,7 +295,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           onChanged: (value) {
                             authService.setNotificationsEnabled(value);
                           },
-                          activeColor: Colors.brown,
+                          activeColor: Colors.blueGrey,
                         ),
                       ),
                       Divider(),

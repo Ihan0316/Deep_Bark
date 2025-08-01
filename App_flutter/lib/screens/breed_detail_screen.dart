@@ -180,8 +180,8 @@ class _BreedDetailScreenState extends State<BreedDetailScreen> {
                       label: Text(localizations.translate('view_more_on_wikipedia')),
                       style: OutlinedButton.styleFrom(
                         minimumSize: Size(double.infinity, 50),
-                        foregroundColor: Colors.brown,
-                        side: BorderSide(color: Colors.brown),
+                        foregroundColor: Colors.blueGrey,
+                        side: BorderSide(color: Colors.blueGrey),
                       ),
                     ),
                   ],

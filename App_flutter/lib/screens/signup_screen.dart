@@ -212,7 +212,7 @@ class _SignupScreenState extends State<SignupScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('회원가입'),
-        backgroundColor: Colors.brown,
+        backgroundColor: Colors.blueGrey,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -256,7 +256,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.brown),
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.blueGrey),
                             ),
                           )
                         : _usernameController.text.isNotEmpty
@@ -302,7 +302,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.brown),
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.blueGrey),
                             ),
                           )
                         : _emailController.text.isNotEmpty
@@ -388,7 +388,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     : ElevatedButton(
                         onPressed: _signup,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.brown,
+                          backgroundColor: Colors.blueGrey,
                           minimumSize: Size(double.infinity, MediaQuery.of(context).size.height * 0.06),
                         ),
                         child: Text(

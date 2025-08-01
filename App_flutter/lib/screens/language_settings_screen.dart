@@ -18,7 +18,7 @@ class LanguageSettingsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(localizations.translate('language_settings')),
-        backgroundColor: Colors.brown,
+        backgroundColor: Colors.blueGrey,
       ),
       body: ListView.builder(
         itemCount: _languageCodes.length,
@@ -29,7 +29,7 @@ class LanguageSettingsScreen extends StatelessWidget {
           return ListTile(
             title: Text(languageName),
             trailing: localeProvider.locale.languageCode == languageCode
-                ? Icon(Icons.check, color: Colors.brown)
+                ? Icon(Icons.check, color: Colors.blueGrey)
                 : null,
             onTap: () {
               localeProvider.setLocale(languageCode!);

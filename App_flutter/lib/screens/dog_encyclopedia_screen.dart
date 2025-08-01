@@ -267,7 +267,7 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
       Offset(size/2, size/2),
       size/2,
       Paint()
-        ..color = Colors.brown
+        ..color = Colors.blueGrey
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3,
     );
@@ -285,7 +285,7 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
               Shadow(
                 offset: Offset(2.0, 2.0),
                 blurRadius: 3.0,
-                color: Colors.brown,
+                color: Colors.blueGrey,
               ),
             ],
           ),
@@ -373,7 +373,7 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
           Polyline(
             polylineId: PolylineId('connection_$i'),
             points: [position, markerPosition],
-            color: Colors.brown.withOpacity(0.6),
+            color: Colors.blueGrey.withOpacity(0.6),
             width: 2,
             patterns: [
               PatternItem.dash(10), // 점선 효과
@@ -441,7 +441,7 @@ class _DogEncyclopediaScreenState extends State<DogEncyclopediaScreen>
       Offset(size/2, size/2),
       size/2,
       Paint()
-        ..color = Colors.brown
+        ..color = Colors.blueGrey
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3,
     );

@@ -68,7 +68,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: Icon(Icons.language, color: Colors.brown),
+            icon: Icon(Icons.language, color: Colors.blueGrey),
             onPressed: () {
               showDialog(
                 context: context,
@@ -81,7 +81,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ListTile(
                           title: Text('한국어'),
                           trailing: localeProvider.locale.languageCode == 'ko'
-                              ? Icon(Icons.check, color: Colors.brown)
+                              ? Icon(Icons.check, color: Colors.blueGrey)
                               : null,
                           onTap: () {
                             localeProvider.setLocale('ko');
@@ -91,7 +91,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ListTile(
                           title: Text('English'),
                           trailing: localeProvider.locale.languageCode == 'en'
-                              ? Icon(Icons.check, color: Colors.brown)
+                              ? Icon(Icons.check, color: Colors.blueGrey)
                               : null,
                           onTap: () {
                             localeProvider.setLocale('en');
@@ -142,7 +142,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ElevatedButton(
                 onPressed: _isLoading ? null : _resetPassword,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.brown,
+                  backgroundColor: Colors.blueGrey,
                   padding: const EdgeInsets.symmetric(vertical: 15),
                 ),
                 child: _isLoading

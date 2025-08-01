@@ -123,7 +123,7 @@ class ScanResultScreen extends StatelessWidget {
                             style: TextStyle(
                               fontSize: MediaQuery.of(context).size.width * 0.06,
                               fontWeight: FontWeight.bold,
-                              color: Colors.brown,
+                              color: Colors.blueGrey,
                             ),
                           ),
                         ),
