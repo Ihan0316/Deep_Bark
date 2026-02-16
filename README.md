@@ -1,118 +1,107 @@
-# Deep_Bark
+# 🐶 Deep_Bark
 
-**Deep_Bark**는 반려견의 사진을 AI로 분석하여 믹스견/순종견 여부와 품종을 예측하고, 위치 기반 서비스를 통해 반려견 관련 다양한 정보를 제공하는 모바일 애플리케이션입니다.
+> **AI 품종 분석과 위치 기반 정보를 결합한 맞춤형 반려견 케어 플랫폼**  
+> 🔗 [배포 링크] | 📄 [Notion 문서](https://www.notion.so/Deep_Bark-2df87486686f814082aaf9d3babd0281)
 
----
+<br>
 
-## 주요 특징
+## 📖 프로젝트 소개 (About)
 
-- **AI 기반 반려견 품종 분석**: 사진 한 장으로 믹스견/순종견 분류 및 품종 예측
-- **위치 기반 서비스**: 지도에서 반려견 원산지 및 품종별 정보 탐색
-- **반려견 정보 제공**: 위키피디아 API 연동으로 품종별 상세 정보 제공
-- **소셜 로그인 및 사용자 관리**: 카카오, 구글 연동
-- **다국어 지원**: 한국어, 영어
+**Deep_Bark**는 반려견의 사진을 AI로 분석하여 믹스견/순종견 여부와 품종을 예측하고, 위치 기반 서비스를 통해 다양한 맞춤형 정보를 제공하는 모바일 애플리케이션입니다.
 
----
+- **제작 기간:** 2025.03.07 ~ 2025.04.22
+- **참여 인원:** 6명 (팀장)
+- **주요 역할:**
+    - 데이터 수집 및 전처리, 프로젝트 진행 조율
+    - Git 형상 관리
+    - 앱 개발 및 AI 모델 연동
 
-## 개발 기간
+<br>
 
-- 2025/3/7 ~ 2025/4/22
+## ✨ 주요 기능 (Key Features)
 
----
+- **📸 AI 품종 분석:** 반려견 사진을 분석하여 품종 및 믹스견 여부 판별
+- **🗺️ 위치 기반 케어:** 주변 동물병원, 산책로, 반려견 동반 가능 장소 추천
+- **📝 맞춤형 정보:** 품종별 특성(성격, 질병 취약점 등) 및 관리 팁 제공
+- **🐕 커뮤니티:** 반려견주 간 정보 공유 및 소통
 
-## 기술 스택
+<br>
 
-| 분야     | 기술/프레임워크                     |
-| -------- | ----------------------------------- |
-| Frontend | Flutter                             |
-| Backend  | Spring Boot                         |
-| AI       | Python, Pytorch, EfficientNet B4 |
-| Database | MariaDB                             |
-| API      | RESTful                             |
+## 🛠 기술 스택 (Tech Stack)
 
----
+| 구분 | 스택 |
+| :-- | :-- |
+| **Frontend(App)** | (e.g. Flutter / React Native / Android Native) |
+| **AI/ML** | ![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat&logo=PyTorch&logoColor=white) (e.g. YOLO, EfficientNet) |
+| **Backend** | (e.g. Django / Spring Boot) |
+| **Database** | (e.g. MySQL / PostgreSQL) |
+| **Tools** | ![Git](https://img.shields.io/badge/Git-F05032?style=flat&logo=Git&logoColor=white) ![Notion](https://img.shields.io/badge/Notion-000000?style=flat&logo=Notion&logoColor=white) |
 
-## 프로젝트 구조
+<br>
 
-### 1. Flutter 모바일 앱 (`App_flutter`)
+## 🏗 아키텍처 및 설계 (Architecture & Design)
 
-- 위치 기반 서비스 (Google Maps)
-- 소셜 로그인 연동 (카카오, 구글)
-- 반려견 정보 및 품종 정보 조회
-- 이미지 업로드 및 분석 요청
-- 다국어 지원 (한국어, 영어)
+### ERD (Entity Relationship Diagram)
+- **Users**: 사용자 계정 정보 (이메일, 비밀번호 등)
+- **Dog Breeds**: 품종 정보 (이름, 크기, 수명, 설명 등)
+- **Mix Dogs**: 믹스견 구성 정보 (부모 품종 매핑)
 
-#### 주요 패키지
+```mermaid
+erDiagram
+    users {
+        bigint id PK "IDENTITY"
+        varchar username UK "max 15"
+        varchar email UK "max 40"
+        varchar password "max 100"
+        instant created_at "DateAudit"
+        instant updated_at "DateAudit"
+    }
 
-- `google_maps_flutter`: 지도 서비스
-- `kakao_flutter_sdk`: 카카오 로그인
-- `google_sign_in`: 구글 로그인
-- `image_picker`: 이미지 선택 및 업로드
-- `http`: API 통신
-- `provider`: 상태 관리
-- `shared_preferences`: 로컬 데이터 저장
-- `webview_flutter`: 웹뷰 기능
-- `geocoding`: 위치 정보 처리
+    dog_breeds {
+        bigint id PK "IDENTITY"
+        varchar name_en "NOT NULL"
+        varchar name_ko "NOT NULL"
+        varchar origin_en
+        varchar origin_ko
+        varchar size_en
+        varchar size_ko
+        varchar lifespan_en
+        varchar lifespan_ko
+        varchar weight
+        text description_en
+        text description_ko
+    }
 
-### 2. Spring Boot 백엔드
+    mix_dogs {
+        bigint id PK "IDENTITY"
+        varchar name_en
+        varchar name_ko
+        varchar breed1 "품종명(문자열)"
+        varchar breed2 "품종명(문자열)"
+    }
 
-- RESTful API 서버
-- 사용자 인증 및 권한 관리
-- MariaDB 연동
-- 파일 업로드 처리
+    mix_dogs ||--o| dog_breeds : "breed1/breed2는 name_en과 논리적 참조"
+```
 
-### 3. Python AI 모델 (`Python/FlaskProject-Deep-Bark`)
+### API 명세서
+- 상세 API 명세는 [Google Docs 링크](https://docs.google.com/document/d/1lT0DWiJp5N4XNDKPadgsbukJPJSWQ1v2ulH8anghz00/edit?usp=sharing)에서 확인할 수 있습니다.
 
-- EfficientNet B4 모델 기반 품종 예측
-- Flask 기반 이미지 분석 API 서버
+<br>
 
----
+## 💭 회고 (Retrospective)
 
-## 설치 및 실행 방법
+- **[Notion 회고록 링크]** (상세 내용은 링크 참조)
+- **배운 점:** AI 모델 학습 데이터 전처리 중요성 및 위치 기반 서비스 구현 노하우
+- **아쉬운 점:** (e.g. 초기 모델 정확도 개선 과정에서의 시행착오)
 
-### 1. Flutter 앱 실행
+<br>
 
-cd App_flutter
-flutter pub get
-flutter run
+## 💻 설치 및 실행 (Installation)
 
-### 2. Spring Boot 백엔드 실행
+```bash
+# 1. Clone the repository
+git clone https://github.com/Ihan0316/Deep_Bark.git
 
-cd Java/deep_bark
-./gradlew bootRun
-
-### 3. Python AI 모델 실행
-
-cd Python/FlaskProject-Deep-Bark
-flask run --host=0.0.0.0 --port=5000
-
-> **참고:**
->
-> - 각 환경별 설정 파일(.env 등)과 API 키, DB 접속 정보 등은 별도 구성 필요
-> - 자세한 환경 변수 설정은 각 디렉터리의 README 또는 예시 파일을 참고하세요.
-
----
-
-## 기여 방법
-
-1. 이 저장소를 fork합니다.
-2. 새로운 feature 브랜치를 생성합니다 (`git checkout -b feature/amazing-feature`)
-3. 변경사항을 commit합니다 (`git commit -m 'Add some amazing feature'`)
-4. 브랜치에 push합니다 (`git push origin feature/amazing-feature`)
-5. Pull Request를 생성합니다.
-
----
-
-## 이슈 제보
-
-버그 리포트나 기능 요청은 [이슈 트래커](https://github.com/Ihan0316/Deep_Bark/issues)를 통해 제보해주세요.
-
----
-
-## 라이선스
-
-이 프로젝트는 MIT 라이선스를 따릅니다.
-
----
-
-> 더 궁금한 점이나 개선 의견이 있다면 언제든 이슈로 남겨주세요!
+# 2. Install dependencies
+# (Instructions for App or Backend setup)
+```
