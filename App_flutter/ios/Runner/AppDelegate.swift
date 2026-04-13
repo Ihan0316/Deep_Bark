@@ -5,15 +5,26 @@ import GoogleSignIn
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
+  private func requiredConfigValue(forKey key: String) -> String {
+    guard let value = Bundle.main.object(forInfoDictionaryKey: key) as? String,
+          !value.isEmpty,
+          !value.contains("$(") else {
+      fatalError("Missing \(key) in Info.plist")
+    }
+    return value
+  }
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // Configure Google Maps with iOS key
-    GMSServices.provideAPIKey("REMOVED_IOS_GOOGLE_MAPS_API_KEY")
+    // Configure Google Maps with a local build setting.
+    GMSServices.provideAPIKey(requiredConfigValue(forKey: "GOOGLE_MAPS_API_KEY"))
     
-    // Configure Google Sign-In
-    GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: "339865363997-hfjddn5s4j39ftiooc1jal6i78i5v9l6.apps.googleusercontent.com")
+    // Configure Google Sign-In from Info.plist to avoid duplicate literals.
+    GIDSignIn.sharedInstance.configuration = GIDConfiguration(
+      clientID: requiredConfigValue(forKey: "GIDClientID")
+    )
     
     GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)

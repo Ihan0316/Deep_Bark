@@ -45,7 +45,7 @@
             android:value="2" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="REMOVED_ANDROID_GOOGLE_MAPS_API_KEY"/>
+            android:value="${googleMapsApiKey}"/>
     </application>
 
     <!-- 기존 queries 유지 -->
