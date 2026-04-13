@@ -12,6 +12,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+def get_bool_env(name, default=False):
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
 # Flask 앱 생성
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = "static/uploads"
@@ -106,4 +113,8 @@ def classify_image():
 
 # Flask 서버 실행
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(
+        debug=get_bool_env("FLASK_DEBUG", False),
+        host=os.getenv("FLASK_HOST", "127.0.0.1"),
+        port=int(os.getenv("FLASK_PORT", "5000"))
+    )

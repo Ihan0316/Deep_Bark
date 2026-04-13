@@ -2,10 +2,13 @@ package com.deepbark.controller;
 
 import com.deepbark.service.UserService;
 import com.deepbark.entity.User;
+import com.deepbark.security.UserPrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -66,8 +69,18 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
+    public ResponseEntity<?> deleteUser(@PathVariable Long userId,
+                                        @AuthenticationPrincipal UserPrincipal currentUser) {
         try {
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Collections.singletonMap("error", "로그인이 필요합니다."));
+            }
+            if (!currentUser.getId().equals(userId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Collections.singletonMap("error", "본인 계정만 삭제할 수 있습니다."));
+            }
+
             logger.info("Deleting user with ID: {}", userId);
             userService.deleteUser(userId);
             Map<String, String> response = new HashMap<>();
@@ -84,13 +97,17 @@ public class UserController {
 
     @PutMapping("/change-password")
     public ResponseEntity<?> changePassword(
-            @RequestHeader("Authorization") String token,
+            @AuthenticationPrincipal UserPrincipal currentUser,
             @RequestBody Map<String, String> request) {
         try {
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Collections.singletonMap("error", "로그인이 필요합니다."));
+            }
+
             logger.info("Changing password for user");
             String currentPassword = request.get("currentPassword");
             String newPassword = request.get("newPassword");
-            String userId = request.get("userId");
 
             if (currentPassword == null || currentPassword.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Collections.singletonMap("error", "현재 비밀번호는 필수 입력값입니다."));
@@ -98,12 +115,8 @@ public class UserController {
             if (newPassword == null || newPassword.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Collections.singletonMap("error", "새 비밀번호는 필수 입력값입니다."));
             }
-            if (userId == null || userId.trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "사용자 ID는 필수 입력값입니다."));
-            }
 
-            // 사용자 조회
-            User user = userService.getUserById(Long.parseLong(userId));
+            User user = userService.getUserById(currentUser.getId());
             if (user == null) {
                 return ResponseEntity.badRequest().body(Collections.singletonMap("error", "사용자를 찾을 수 없습니다."));
             }

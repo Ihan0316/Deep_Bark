@@ -19,22 +19,45 @@ class ApiService {
     return prefs.getString('auth_token');
   }
 
-  Future<Map<String, dynamic>> registerUser(String email, String password, String username, String name) async {
+  String _extractErrorMessage(http.Response response, String fallbackMessage) {
+    try {
+      final responseBody = utf8.decode(response.bodyBytes);
+      if (responseBody.isEmpty) {
+        return fallbackMessage;
+      }
+
+      final responseData = jsonDecode(responseBody);
+      if (responseData is Map<String, dynamic>) {
+        return responseData['error'] ??
+            responseData['message'] ??
+            fallbackMessage;
+      }
+    } catch (_) {
+      // 서버 오류 응답이 JSON이 아닐 수 있어 기본 메시지로 처리
+    }
+
+    return fallbackMessage;
+  }
+
+  Future<Map<String, dynamic>> registerUser(
+    String email,
+    String password,
+    String username,
+    String name,
+  ) async {
     try {
       print('회원가입 API 요청 시작');
       final url = Uri.parse('$baseUrl/api/auth/register');
       print('요청 URL: $url');
-      
+
       final response = await http.post(
         url,
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-        },
+        headers: {'Content-Type': 'application/json; charset=utf-8'},
         body: jsonEncode({
           'email': email,
           'password': password,
           'username': username,
-          'name': name
+          'name': name,
         }),
       );
 
@@ -61,13 +84,8 @@ class ApiService {
       print('로그인 요청: $baseUrl/api/auth/login');
       final response = await http.post(
         Uri.parse('$baseUrl/api/auth/login'),
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-        },
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
+        headers: {'Content-Type': 'application/json; charset=utf-8'},
+        body: jsonEncode({'email': email, 'password': password}),
       );
 
       print('로그인 응답 상태 코드: ${response.statusCode}');
@@ -77,20 +95,20 @@ class ApiService {
         try {
           final responseBody = utf8.decode(response.bodyBytes);
           final responseData = jsonDecode(responseBody);
-          
+
           // 응답 데이터 검증
           if (responseData['token'] == null || responseData['user'] == null) {
             print('로그인 실패: 유효하지 않은 응답 데이터');
             return {'success': false, 'message': '서버 응답이 올바르지 않습니다.'};
           }
-          
+
           // 사용자 정보 검증
           final userData = responseData['user'];
           if (userData['id'] == null || userData['username'] == null) {
             print('로그인 실패: 유효하지 않은 사용자 정보');
             return {'success': false, 'message': '사용자 정보가 올바르지 않습니다.'};
           }
-          
+
           return {'success': true, ...responseData};
         } catch (e) {
           print('JSON 디코딩 오류: $e');
@@ -102,21 +120,18 @@ class ApiService {
           final errorData = jsonDecode(responseBody);
           return {
             'success': false,
-            'message': errorData['message'] ?? '로그인에 실패했습니다.'
+            'message': errorData['message'] ?? '로그인에 실패했습니다.',
           };
         } catch (e) {
           return {
             'success': false,
-            'message': '로그인에 실패했습니다. (상태 코드: ${response.statusCode})'
+            'message': '로그인에 실패했습니다. (상태 코드: ${response.statusCode})',
           };
         }
       }
     } catch (e) {
       print('로그인 API 오류: $e');
-      return {
-        'success': false,
-        'message': '서버 연결에 실패했습니다.'
-      };
+      return {'success': false, 'message': '서버 연결에 실패했습니다.'};
     }
   }
 
@@ -125,12 +140,8 @@ class ApiService {
       print('사용자 이름 중복 검사 요청: $baseUrl/api/auth/check-username');
       final response = await http.post(
         Uri.parse('$baseUrl/api/auth/check-username'),
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-        },
-        body: jsonEncode({
-          'username': username,
-        }),
+        headers: {'Content-Type': 'application/json; charset=utf-8'},
+        body: jsonEncode({'username': username}),
       );
 
       print('사용자 이름 중복 검사 응답 상태 코드: ${response.statusCode}');
@@ -151,18 +162,24 @@ class ApiService {
 
   Future<bool> deleteUser(String userId) async {
     try {
+      final token = await _getToken();
+      if (token == null || token.isEmpty) {
+        throw Exception('로그인이 필요합니다.');
+      }
+
       final url = Uri.parse('$baseUrl/api/users/$userId');
       final response = await http.delete(
         url,
         headers: {
           'Content-Type': 'application/json; charset=utf-8',
+          'Authorization': 'Bearer $token',
         },
       );
 
       if (response.statusCode == 200) {
         return true;
       } else {
-        throw Exception('사용자 삭제 실패: ${response.statusCode}');
+        throw Exception(_extractErrorMessage(response, '사용자 삭제에 실패했습니다.'));
       }
     } catch (e) {
       print('사용자 삭제 요청 중 오류 발생: $e');
@@ -175,15 +192,11 @@ class ApiService {
       print('비밀번호 초기화 API 요청 시작');
       final url = Uri.parse('$baseUrl/api/auth/reset-password');
       print('요청 URL: $url');
-      
+
       final response = await http.post(
         url,
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-        },
-        body: jsonEncode({
-          'email': email,
-        }),
+        headers: {'Content-Type': 'application/json; charset=utf-8'},
+        body: jsonEncode({'email': email}),
       );
 
       print('비밀번호 초기화 응답 상태 코드: ${response.statusCode}');
@@ -203,12 +216,15 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> changePassword(String userId, String currentPassword, String newPassword) async {
+  Future<Map<String, dynamic>> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
     try {
       print('비밀번호 변경 API 요청 시작');
       final url = Uri.parse('$baseUrl/api/users/change-password');
       print('요청 URL: $url');
-      
+
       final response = await http.put(
         url,
         headers: {
@@ -216,7 +232,6 @@ class ApiService {
           'Authorization': 'Bearer ${await _getToken()}',
         },
         body: jsonEncode({
-          'userId': userId,
           'currentPassword': currentPassword,
           'newPassword': newPassword,
         }),
@@ -238,4 +253,4 @@ class ApiService {
       rethrow;
     }
   }
-} 
+}

@@ -41,3 +41,7 @@ out/
 **/.dart_tool/
 **/build/
 
+# Local secrets
+secrets/*
+!secrets/
+!secrets/*.example

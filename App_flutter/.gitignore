@@ -1,6 +1,7 @@
 /build/
 /.idea/
 .env
+assets/.env
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
 ios/Flutter/Secrets.xcconfig

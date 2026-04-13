@@ -16,6 +16,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _emailController = TextEditingController();
   bool _isLoading = false;
 
+  String _errorMessage(Object error) {
+    const prefix = 'Exception: ';
+    final message = error.toString();
+    return message.startsWith(prefix)
+        ? message.substring(prefix.length)
+        : message;
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -34,7 +42,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).translate('reset_password_success')),
+            content: Text(
+              AppLocalizations.of(context).translate('reset_password_success'),
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -44,7 +54,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(_errorMessage(e)),
             backgroundColor: Colors.red,
           ),
         );
@@ -80,9 +90,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       children: [
                         ListTile(
                           title: Text('한국어'),
-                          trailing: localeProvider.locale.languageCode == 'ko'
-                              ? Icon(Icons.check, color: Colors.blueGrey)
-                              : null,
+                          trailing:
+                              localeProvider.locale.languageCode == 'ko'
+                                  ? Icon(Icons.check, color: Colors.blueGrey)
+                                  : null,
                           onTap: () {
                             localeProvider.setLocale('ko');
                             Navigator.pop(context);
@@ -90,9 +101,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ),
                         ListTile(
                           title: Text('English'),
-                          trailing: localeProvider.locale.languageCode == 'en'
-                              ? Icon(Icons.check, color: Colors.blueGrey)
-                              : null,
+                          trailing:
+                              localeProvider.locale.languageCode == 'en'
+                                  ? Icon(Icons.check, color: Colors.blueGrey)
+                                  : null,
                           onTap: () {
                             localeProvider.setLocale('en');
                             Navigator.pop(context);
@@ -132,7 +144,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   if (value == null || value.isEmpty) {
                     return localizations.translate('email_required');
                   }
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                  if (!RegExp(
+                    r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                  ).hasMatch(value)) {
                     return localizations.translate('invalid_email_format');
                   }
                   return null;
@@ -145,9 +159,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   backgroundColor: Colors.blueGrey,
                   padding: const EdgeInsets.symmetric(vertical: 15),
                 ),
-                child: _isLoading
-                    ? const CircularProgressIndicator()
-                    : Text(localizations.translate('reset_password')),
+                child:
+                    _isLoading
+                        ? const CircularProgressIndicator()
+                        : Text(localizations.translate('reset_password')),
               ),
             ],
           ),
@@ -155,4 +170,4 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ),
     );
   }
-} 
+}

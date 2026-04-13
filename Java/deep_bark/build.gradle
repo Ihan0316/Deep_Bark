@@ -34,7 +34,9 @@ dependencies {
     // Spring Boot Starters
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     
@@ -113,6 +115,9 @@ dependencies {
 
     // Image Processing
     implementation 'net.coobird:thumbnailator:0.4.20'
+
+    // CSV 파싱 (견종 데이터 초기 로드)
+    implementation 'com.opencsv:opencsv:5.9'
 }
 
 tasks.named('test') {

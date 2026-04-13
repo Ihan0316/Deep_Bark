@@ -7,6 +7,7 @@ import com.deepbark.dto.UserDto;
 import com.deepbark.entity.User;
 import com.deepbark.repository.UserRepository;
 import com.deepbark.security.JwtTokenProvider;
+import com.deepbark.service.PasswordResetService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -35,6 +36,9 @@ public class AuthController {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private PasswordResetService passwordResetService;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
@@ -110,30 +114,22 @@ public class AuthController {
 
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        if (email == null || email.trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Collections.singletonMap("error", "이메일은 필수 입력값입니다."));
+        }
+
         try {
-            String email = request.get("email");
-
-            if (email == null || email.trim().isEmpty()) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("error", "이메일은 필수 입력값입니다."));
-            }
-
-            // 이메일로 사용자 찾기
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("해당 이메일로 등록된 사용자가 없습니다."));
-
-            // 비밀번호를 "1234"로 초기화
-            user.setPassword(passwordEncoder.encode("1234"));
-            userRepository.save(user);
+            passwordResetService.requestPasswordReset(email.trim());
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
-            response.put("message", "비밀번호가 1234로 초기화되었습니다. 로그인 후 비밀번호를 변경해주세요.");
+            response.put("message", "가입된 이메일이라면 비밀번호 재설정 링크를 전송했습니다. 메일함을 확인해주세요.");
             return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", false);
-            response.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(response);
+        } catch (IllegalStateException ex) {
+            return ResponseEntity.status(503)
+                    .body(Collections.singletonMap("error", ex.getMessage()));
         }
     }
 }

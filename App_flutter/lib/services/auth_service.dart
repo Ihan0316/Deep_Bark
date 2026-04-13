@@ -12,7 +12,7 @@ import 'dart:async';
 
 class AuthService extends ChangeNotifier {
   bool _isLoggedIn = false;
-  String _userId = '0';  // String 타입으로 통일
+  String _userId = '0'; // String 타입으로 통일
   String _userEmail = 'user@example.com';
   String _userName = '사용자';
   bool _notificationsEnabled = true;
@@ -25,12 +25,7 @@ class AuthService extends ChangeNotifier {
   static const String _userKey = 'user_data';
 
   // Google Sign In 인스턴스
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: [
-      'email',
-      'profile',
-    ],
-  );
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
 
   // Debounce timers
   Timer? _usernameDebounceTimer;
@@ -97,22 +92,22 @@ class AuthService extends ChangeNotifier {
     try {
       // API를 통해 로그인 검증
       final loginResult = await _apiService.loginUser(email, password);
-      
+
       if (loginResult != null && loginResult['token'] != null) {
         // 로그인 성공 시 사용자 정보 저장
         _isLoggedIn = true;
         _currentUser = MyAppUser.User.fromJson(loginResult['user']);
-        _userId = _currentUser!.id.toString();  // int를 String으로 변환
+        _userId = _currentUser!.id.toString(); // int를 String으로 변환
         _userEmail = email;
         _userName = _currentUser!.username;
         _loginProvider = 'email';
-        
+
         // 토큰 저장
         await _saveToken(loginResult['token']);
         // 사용자 정보 저장
         await _saveUserData(_currentUser!.toJson());
         await _saveUserToLocal();
-        
+
         notifyListeners();
         return true;
       }
@@ -133,8 +128,13 @@ class AuthService extends ChangeNotifier {
   Future<bool> signup(String email, String password, String username) async {
     try {
       // API를 통해 회원가입 요청
-      final result = await _apiService.registerUser(email, password, username, username);  // username을 name으로도 사용
-      
+      final result = await _apiService.registerUser(
+        email,
+        password,
+        username,
+        username,
+      ); // username을 name으로도 사용
+
       if (result['success'] == true) {
         print('회원가입 성공: ${result['message']}');
         return true;
@@ -187,19 +187,19 @@ class AuthService extends ChangeNotifier {
   Future<bool> signInWithEmailAndPassword(String email, String password) async {
     try {
       final result = await _apiService.loginUser(email, password);
-      
+
       if (result?['success'] == true) {
         _isLoggedIn = true;
         _currentUser = MyAppUser.User.fromJson(result!['user']);
-        _userId = _currentUser!.id.toString();  // int를 String으로 변환
+        _userId = _currentUser!.id.toString(); // int를 String으로 변환
         _userEmail = _currentUser!.email;
         _userName = _currentUser!.username;
         _loginProvider = 'email';
-        
+
         await _saveToken(result['token']);
         await _saveUserData(_currentUser!.toJson());
         await _saveUserToLocal();
-        
+
         notifyListeners();
         return true;
       } else {
@@ -211,16 +211,28 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  Future<bool> signUpWithEmailAndPassword(String email, String password, String username, String name) async {
+  Future<bool> signUpWithEmailAndPassword(
+    String email,
+    String password,
+    String username,
+    String name,
+  ) async {
     try {
-      print('회원가입 요청 데이터: {"email": "$email", "password": "$password", "username": "$username", "name": "$name"}');
-      final result = await _apiService.registerUser(email, password, username, name);
-      
+      print(
+        '회원가입 요청 데이터: {"email": "$email", "password": "$password", "username": "$username", "name": "$name"}',
+      );
+      final result = await _apiService.registerUser(
+        email,
+        password,
+        username,
+        name,
+      );
+
       print('회원가입 응답: $result');
-      
+
       if (result['success'] == true) {
         _isLoggedIn = true;
-        _userId = result['user']['id'].toString();  // int를 String으로 변환
+        _userId = result['user']['id'].toString(); // int를 String으로 변환
         _userEmail = email;
         _userName = username;
         await _saveUserData({
@@ -228,7 +240,7 @@ class AuthService extends ChangeNotifier {
           'email': email,
           'username': username,
           'name': name,
-          'isLoggedIn': true
+          'isLoggedIn': true,
         });
         notifyListeners();
         return true;
@@ -255,7 +267,8 @@ class AuthService extends ChangeNotifier {
 
       print('구글 사용자 정보: ${googleUser.displayName}, ${googleUser.email}');
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
       _isLoggedIn = true;
       _currentUser = MyAppUser.User(
@@ -263,7 +276,7 @@ class AuthService extends ChangeNotifier {
         email: googleUser.email,
         username: googleUser.displayName ?? 'Google 사용자',
         profileImageUrl: googleUser.photoUrl ?? '',
-        loginProvider: 'google'
+        loginProvider: 'google',
       );
       _userId = _currentUser!.id.toString();
       _userEmail = googleUser.email;
@@ -303,7 +316,7 @@ class AuthService extends ChangeNotifier {
         email: user.kakaoAccount?.email ?? 'kakao_user@example.com',
         username: user.kakaoAccount?.profile?.nickname ?? '카카오 사용자',
         profileImageUrl: user.kakaoAccount?.profile?.profileImageUrl ?? '',
-        loginProvider: 'kakao'
+        loginProvider: 'kakao',
       );
       _userId = _currentUser!.id.toString();
       _userEmail = user.kakaoAccount?.email ?? 'kakao_user@example.com';
@@ -324,7 +337,8 @@ class AuthService extends ChangeNotifier {
   Future<bool> signInWithKakaoAccount() async {
     try {
       // 카카오계정으로 로그인
-      KakaoSDK.OAuthToken token = await KakaoSDK.UserApi.instance.loginWithKakaoAccount();
+      KakaoSDK.OAuthToken token =
+          await KakaoSDK.UserApi.instance.loginWithKakaoAccount();
 
       // 사용자 정보 가져오기
       KakaoSDK.User user = await KakaoSDK.UserApi.instance.me();
@@ -336,7 +350,7 @@ class AuthService extends ChangeNotifier {
         email: user.kakaoAccount?.email ?? 'kakao_user@example.com',
         username: user.kakaoAccount?.profile?.nickname ?? '카카오 사용자',
         profileImageUrl: user.kakaoAccount?.profile?.profileImageUrl ?? '',
-        loginProvider: 'kakao'
+        loginProvider: 'kakao',
       );
       _userId = _currentUser!.id;
       _userEmail = user.kakaoAccount?.email ?? 'kakao_user@example.com';
@@ -354,7 +368,6 @@ class AuthService extends ChangeNotifier {
       return false;
     }
   }
-
 
   // 추가 사용자 정보를 가져오는 메서드 (선택 사항)
   Future<void> _fetchAdditionalUserInfo(String? accessToken) async {
@@ -425,8 +438,7 @@ class AuthService extends ChangeNotifier {
 
   Future<bool> deleteAccount() async {
     try {
-      // 서버에서 사용자 정보 삭제
-      if (_userId != '0') {
+      if (isEmailLogin() && _userId != '0') {
         await _apiService.deleteUser(_userId);
       }
 
@@ -460,7 +472,7 @@ class AuthService extends ChangeNotifier {
       return true;
     } catch (e) {
       print('계정 삭제 오류: $e');
-      return false;
+      rethrow;
     }
   }
 
@@ -475,14 +487,15 @@ class AuthService extends ChangeNotifier {
         if (_isGoogleUser()) {
           final isSignedIn = await _googleSignIn.isSignedIn();
           if (isSignedIn) {
-            final GoogleSignInAccount? account = await _googleSignIn.signInSilently();
+            final GoogleSignInAccount? account =
+                await _googleSignIn.signInSilently();
             if (account != null) {
               _currentUser = MyAppUser.User(
                 id: account.id,
                 email: account.email,
                 username: account.displayName ?? 'Google 사용자',
                 profileImageUrl: account.photoUrl ?? '',
-                loginProvider: 'google'
+                loginProvider: 'google',
               );
               _userId = _currentUser!.id.toString();
               _userEmail = account.email;
@@ -505,13 +518,15 @@ class AuthService extends ChangeNotifier {
                 id: user.id.toString(),
                 email: user.kakaoAccount?.email ?? 'kakao_user@example.com',
                 username: user.kakaoAccount?.profile?.nickname ?? '카카오 사용자',
-                profileImageUrl: user.kakaoAccount?.profile?.profileImageUrl ?? '',
-                loginProvider: 'kakao'
+                profileImageUrl:
+                    user.kakaoAccount?.profile?.profileImageUrl ?? '',
+                loginProvider: 'kakao',
               );
               _userId = _currentUser!.id.toString();
               _userEmail = user.kakaoAccount?.email ?? 'kakao_user@example.com';
               _userName = user.kakaoAccount?.profile?.nickname ?? '카카오 사용자';
-              _profileImageUrl = user.kakaoAccount?.profile?.profileImageUrl ?? '';
+              _profileImageUrl =
+                  user.kakaoAccount?.profile?.profileImageUrl ?? '';
 
               print('카카오 자동 로그인 성공: $_userName, $_userEmail');
               await _saveUserToLocal();
@@ -548,13 +563,18 @@ class AuthService extends ChangeNotifier {
         return false;
       }
 
-      var uri = Uri.parse('${ApiService.baseUrl}/api/users/$_userId/profile-image');
-      var request = http.MultipartRequest('POST', uri)
-        ..headers['Authorization'] = 'Bearer ${await _getToken()}'
-        ..files.add(await http.MultipartFile.fromPath('image', imageFile.path));
+      var uri = Uri.parse(
+        '${ApiService.baseUrl}/api/users/$_userId/profile-image',
+      );
+      var request =
+          http.MultipartRequest('POST', uri)
+            ..headers['Authorization'] = 'Bearer ${await _getToken()}'
+            ..files.add(
+              await http.MultipartFile.fromPath('image', imageFile.path),
+            );
 
       var response = await request.send();
-      
+
       if (response.statusCode == 200) {
         _profileImageUrl = await response.stream.bytesToString();
         await _saveUserToLocal();
@@ -582,10 +602,10 @@ class AuthService extends ChangeNotifier {
   Future<bool> checkUsernameAvailability(String username) async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiService.baseUrl}/api/users/check-username?username=$username'),
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-        },
+        Uri.parse(
+          '${ApiService.baseUrl}/api/users/check-username?username=$username',
+        ),
+        headers: {'Content-Type': 'application/json; charset=utf-8'},
       );
 
       if (response.statusCode == 200) {
@@ -604,9 +624,7 @@ class AuthService extends ChangeNotifier {
     try {
       final response = await http.get(
         Uri.parse('${ApiService.baseUrl}/api/users/check-email?email=$email'),
-        headers: {
-          'Content-Type': 'application/json; charset=utf-8',
-        },
+        headers: {'Content-Type': 'application/json; charset=utf-8'},
       );
 
       if (response.statusCode == 200) {
@@ -624,35 +642,42 @@ class AuthService extends ChangeNotifier {
   // Debounced username check
   void debouncedCheckUsername(String username, Function(bool) onResult) {
     _usernameDebounceTimer?.cancel();
-    _usernameDebounceTimer = Timer(Duration(milliseconds: _debounceDuration), () async {
-      if (username.isEmpty) {
-        onResult(false);
-        return;
-      }
-      try {
-        final result = await checkUsernameAvailability(username);
-        onResult(result);
-      } catch (e) {
-        onResult(false);
-      }
-    });
+    _usernameDebounceTimer = Timer(
+      Duration(milliseconds: _debounceDuration),
+      () async {
+        if (username.isEmpty) {
+          onResult(false);
+          return;
+        }
+        try {
+          final result = await checkUsernameAvailability(username);
+          onResult(result);
+        } catch (e) {
+          onResult(false);
+        }
+      },
+    );
   }
 
   // Debounced email check
   void debouncedCheckEmail(String email, Function(bool) onResult) {
     _emailDebounceTimer?.cancel();
-    _emailDebounceTimer = Timer(Duration(milliseconds: _debounceDuration), () async {
-      if (email.isEmpty || !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
-        onResult(false);
-        return;
-      }
-      try {
-        final result = await checkEmailAvailability(email);
-        onResult(result);
-      } catch (e) {
-        onResult(false);
-      }
-    });
+    _emailDebounceTimer = Timer(
+      Duration(milliseconds: _debounceDuration),
+      () async {
+        if (email.isEmpty ||
+            !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+          onResult(false);
+          return;
+        }
+        try {
+          final result = await checkEmailAvailability(email);
+          onResult(result);
+        } catch (e) {
+          onResult(false);
+        }
+      },
+    );
   }
 
   @override
@@ -666,7 +691,7 @@ class AuthService extends ChangeNotifier {
     try {
       print('비밀번호 초기화 시작');
       final result = await _apiService.resetPassword(email);
-      
+
       if (result['success'] == true) {
         print('비밀번호 초기화 성공: ${result['message']}');
         return true;
@@ -680,15 +705,24 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  Future<bool> changePassword(String currentPassword, String newPassword) async {
+  Future<bool> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
     try {
       print('비밀번호 변경 시작');
       if (_userId == '0') {
         throw Exception('로그인이 필요합니다.');
       }
+      if (!isEmailLogin()) {
+        throw Exception('이메일 로그인 사용자만 비밀번호를 변경할 수 있습니다.');
+      }
 
-      final result = await _apiService.changePassword(_userId, currentPassword, newPassword);
-      
+      final result = await _apiService.changePassword(
+        currentPassword,
+        newPassword,
+      );
+
       if (result['success'] == true) {
         print('비밀번호 변경 성공: ${result['message']}');
         return true;

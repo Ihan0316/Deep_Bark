@@ -19,6 +19,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
   double? _matchPercentage;
 
+  String _errorMessage(Object error) {
+    const prefix = 'Exception: ';
+    final message = error.toString();
+    return message.startsWith(prefix)
+        ? message.substring(prefix.length)
+        : message;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -40,9 +48,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showChangePasswordDialog() {
     final localizations = AppLocalizations.of(context);
-    final TextEditingController currentPasswordController = TextEditingController();
+    final TextEditingController currentPasswordController =
+        TextEditingController();
     final TextEditingController newPasswordController = TextEditingController();
-    final TextEditingController confirmPasswordController = TextEditingController();
+    final TextEditingController confirmPasswordController =
+        TextEditingController();
     bool isLoading = false;
 
     showDialog(
@@ -76,7 +86,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   TextField(
                     controller: confirmPasswordController,
                     decoration: InputDecoration(
-                      labelText: localizations.translate('confirm_new_password'),
+                      labelText: localizations.translate(
+                        'confirm_new_password',
+                      ),
                       border: const OutlineInputBorder(),
                     ),
                     obscureText: true,
@@ -89,55 +101,69 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Text(localizations.translate('cancel')),
                 ),
                 ElevatedButton(
-                  onPressed: isLoading
-                      ? null
-                      : () async {
-                          if (newPasswordController.text != confirmPasswordController.text) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(localizations.translate('passwords_do_not_match')),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                            return;
-                          }
-
-                          setState(() => isLoading = true);
-
-                          try {
-                            final authService = Provider.of<AuthService>(context, listen: false);
-                            await authService.changePassword(
-                              currentPasswordController.text,
-                              newPasswordController.text,
-                            );
-
-                            if (mounted) {
-                              Navigator.pop(context);
+                  onPressed:
+                      isLoading
+                          ? null
+                          : () async {
+                            if (newPasswordController.text !=
+                                confirmPasswordController.text) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(localizations.translate('password_changed_successfully')),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(e.toString()),
+                                  content: Text(
+                                    localizations.translate(
+                                      'passwords_do_not_match',
+                                    ),
+                                  ),
                                   backgroundColor: Colors.red,
                                 ),
                               );
+                              return;
                             }
-                          } finally {
-                            if (mounted) {
-                              setState(() => isLoading = false);
+
+                            setState(() => isLoading = true);
+
+                            try {
+                              final authService = Provider.of<AuthService>(
+                                context,
+                                listen: false,
+                              );
+                              await authService.changePassword(
+                                currentPasswordController.text,
+                                newPasswordController.text,
+                              );
+
+                              if (mounted) {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      localizations.translate(
+                                        'password_changed_successfully',
+                                      ),
+                                    ),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(_errorMessage(e)),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            } finally {
+                              if (mounted) {
+                                setState(() => isLoading = false);
+                              }
                             }
-                          }
-                        },
-                  child: isLoading
-                      ? const CircularProgressIndicator()
-                      : Text(localizations.translate('change')),
+                          },
+                  child:
+                      isLoading
+                          ? const CircularProgressIndicator()
+                          : Text(localizations.translate('change')),
                 ),
               ],
             );
@@ -159,7 +185,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false, // 뒤로가기 버튼 비활성화
-        title: Text(localizations.translate('profile'))
+        title: Text(localizations.translate('profile')),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -172,7 +198,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               GestureDetector(
                 onTap: _getImage,
                 child: CircleAvatar(
-                  radius: MediaQuery.of(context).size.width * 0.15, // 화면 너비의 15%로 조정
+                  radius:
+                      MediaQuery.of(context).size.width *
+                      0.15, // 화면 너비의 15%로 조정
                   backgroundColor: Colors.grey[300],
                   backgroundImage:
                       _profileImage != null
@@ -186,14 +214,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               authService.profileImageUrl.isEmpty)
                           ? Icon(
                             Icons.person,
-                            size: MediaQuery.of(context).size.width * 0.15, // 화면 너비의 15%로 조정
+                            size:
+                                MediaQuery.of(context).size.width *
+                                0.15, // 화면 너비의 15%로 조정
                             color: Colors.grey[600],
                           )
                           : null,
                 ),
               ),
-              SizedBox(height: MediaQuery.of(context).size.height * 0.03), // 화면 높이의 3%로 조정
-
+              SizedBox(
+                height: MediaQuery.of(context).size.height * 0.03,
+              ), // 화면 높이의 3%로 조정
               // 로그인 정보 표시 (소셜 로그인 포함)
               Card(
                 elevation: 2,
@@ -208,10 +239,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           padding: const EdgeInsets.only(bottom: 16.0),
                           child: Row(
                             children: [
-                              Icon(Icons.g_mobiledata, color: Colors.blue, size: 30),
+                              Icon(
+                                Icons.g_mobiledata,
+                                color: Colors.blue,
+                                size: 30,
+                              ),
                               SizedBox(width: 8),
                               Text(
-                                localizations.translate('logged_in_with_google'),
+                                localizations.translate(
+                                  'logged_in_with_google',
+                                ),
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.blue,
@@ -225,7 +262,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           padding: const EdgeInsets.only(bottom: 16.0),
                           child: Row(
                             children: [
-                              Icon(Icons.chat, color: Colors.yellow[900], size: 30),
+                              Icon(
+                                Icons.chat,
+                                color: Colors.yellow[900],
+                                size: 30,
+                              ),
                               SizedBox(width: 8),
                               Text(
                                 localizations.translate('logged_in_with_kakao'),
@@ -242,7 +283,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           padding: const EdgeInsets.only(bottom: 16.0),
                           child: Row(
                             children: [
-                              Icon(Icons.email, color: Colors.grey[800], size: 30),
+                              Icon(
+                                Icons.email,
+                                color: Colors.grey[800],
+                                size: 30,
+                              ),
                               SizedBox(width: 8),
                               Text(
                                 localizations.translate('logged_in_with_email'),
@@ -259,15 +304,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Text(
                         authService.userName,
                         style: TextStyle(
-                          fontSize: MediaQuery.of(context).size.width * 0.05, // 화면 너비의 5%로 조정
+                          fontSize:
+                              MediaQuery.of(context).size.width *
+                              0.05, // 화면 너비의 5%로 조정
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: MediaQuery.of(context).size.height * 0.01), // 화면 높이의 1%로 조정
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.01,
+                      ), // 화면 높이의 1%로 조정
                       Text(
                         authService.userEmail,
                         style: TextStyle(
-                          fontSize: MediaQuery.of(context).size.width * 0.04, // 화면 너비의 4%로 조정
+                          fontSize:
+                              MediaQuery.of(context).size.width *
+                              0.04, // 화면 너비의 4%로 조정
                           color: Colors.grey[600],
                         ),
                       ),
@@ -315,11 +366,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           );
                         },
                       ),
-                      ListTile(
-                        leading: const Icon(Icons.lock),
-                        title: Text(localizations.translate('change_password')),
-                        onTap: _showChangePasswordDialog,
-                      ),
+                      if (authService.isEmailLogin())
+                        ListTile(
+                          leading: const Icon(Icons.lock),
+                          title: Text(
+                            localizations.translate('change_password'),
+                          ),
+                          onTap: _showChangePasswordDialog,
+                        ),
                     ],
                   ),
                 ),
@@ -363,15 +417,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               child: Text(localizations.translate('cancel')),
                             ),
                             TextButton(
-                              onPressed: () {
-                                // 회원 탈퇴 처리
-                                authService.deleteAccount().then((_) {
+                              onPressed: () async {
+                                try {
+                                  await authService.deleteAccount();
+
+                                  if (!mounted) {
+                                    return;
+                                  }
+
                                   Navigator.pop(context);
                                   Navigator.pushReplacementNamed(
                                     context,
                                     '/login',
                                   );
-                                });
+                                } catch (e) {
+                                  if (!mounted) {
+                                    return;
+                                  }
+
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(_errorMessage(e)),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
                               },
                               child: Text(localizations.translate('delete')),
                               style: TextButton.styleFrom(

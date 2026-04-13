@@ -68,8 +68,11 @@
   "forgot_password": "Forgot Password",
   "enter_registered_email": "Please enter your registered email address",
   "reset_password": "Reset Password",
-  "reset_password_success": "Your password has been reset to 1234. Please log in and change your password.",
+  "reset_password_success": "If the email is registered, a password reset link has been sent. Please check your inbox.",
   "invalid_email_format": "Please enter a valid email format",
+  "password_reset_unavailable": "Self-service password reset is currently unavailable.",
+  "password_reset_help": "Email login users can change their password from My Profile after signing in. If you cannot sign in, please contact the administrator.",
+  "back_to_login": "Back to Login",
   "change_password": "Change Password",
   "current_password": "Current Password",
   "new_password": "New Password",
@@ -77,4 +80,3 @@
   "passwords_do_not_match": "Passwords do not match",
   "password_changed_successfully": "Password changed successfully"
 }
-

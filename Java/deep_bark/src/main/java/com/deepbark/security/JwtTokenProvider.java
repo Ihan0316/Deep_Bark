@@ -11,6 +11,7 @@ import java.util.Date;
 
 @Component
 public class JwtTokenProvider {
+    private static final String PASSWORD_RESET_PURPOSE = "password_reset";
 
     private final SecretKey secretKey;
     private final int jwtExpirationInMs;
@@ -46,6 +47,24 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public String generatePasswordResetToken(
+            String email,
+            String passwordFingerprint,
+            long expirationInMs
+    ) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expirationInMs);
+
+        return Jwts.builder()
+                .setSubject(email)
+                .claim("purpose", PASSWORD_RESET_PURPOSE)
+                .claim("passwordFingerprint", passwordFingerprint)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(secretKey, SignatureAlgorithm.HS512)
+                .compact();
+    }
+
     public Long getUserIdFromJWT(String token) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(secretKey)
@@ -66,6 +85,18 @@ public class JwtTokenProvider {
         return claims.getSubject();
     }
 
+    public Claims parseClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    public boolean isPasswordResetToken(Claims claims) {
+        return PASSWORD_RESET_PURPOSE.equals(claims.get("purpose", String.class));
+    }
+
     public boolean validateToken(String authToken) {
         try {
             Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(authToken);
@@ -74,4 +105,4 @@ public class JwtTokenProvider {
             return false;
         }
     }
-} 
+}
